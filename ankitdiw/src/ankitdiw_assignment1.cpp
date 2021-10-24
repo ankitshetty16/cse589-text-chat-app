@@ -25,6 +25,7 @@
 
 #include "../include/global.h"
 #include "../include/logger.h"
+#include "../include/server.h"
 
 using namespace std;
 
@@ -44,6 +45,7 @@ int main(int argc, char **argv)
     fclose(fopen(LOGFILE, "w"));
 
 	/*Start Here*/
+	server_init(argc, argv);
 	
 	return 0;
 }
