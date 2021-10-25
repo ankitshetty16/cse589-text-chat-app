@@ -22,6 +22,7 @@
 * Uses the select() API to multiplex between network I/O and STDIN.
 */
 #include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -45,8 +46,9 @@
 * @return 0 EXIT_SUCCESS
 */
 int server_init(int argc, char **argv)
-{
-	if(argc != 2) {
+{	
+	std::cout << argc << argv;
+	if(argc != 3) {
 		printf("Usage:%s [port]\n", argv[0]);
 		exit(-1);
 	}
