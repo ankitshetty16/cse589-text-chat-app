@@ -47,7 +47,7 @@
 */
 int server_init(int argc, char **argv)
 {	
-	std::cout << argc << argv;
+	std::cout << "Printing args " << argc << "  " << argv << "\n";
 	if(argc != 3) {
 		printf("Usage:%s [port]\n", argv[0]);
 		exit(-1);
