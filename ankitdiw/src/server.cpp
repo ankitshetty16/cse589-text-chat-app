@@ -47,9 +47,8 @@
 */
 int server_init(int argc, char **argv)
 {	
-	std::cout << "Printing args " << argc << "  " << argv << "\n";
 	if(argc != 3) {
-		printf("Usage:%s [port]\n", argv[0]);
+		printf("Usage:%s [port]\n", argv[1]);
 		exit(-1);
 	}
 	
@@ -66,7 +65,8 @@ int server_init(int argc, char **argv)
     	hints.ai_flags = AI_PASSIVE;
 
 	/* Fill up address structures */
-	if (getaddrinfo(NULL, argv[1], &hints, &res) != 0)
+	std::cout << "Printing getaddrinfo " << *argv[2] << "\n";
+	if (getaddrinfo(NULL, argv[2], &hints, &res) != 0)
 		perror("getaddrinfo failed");
 	
 	/* Socket */
