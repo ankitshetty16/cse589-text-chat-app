@@ -25,7 +25,7 @@
 
 #include "../include/global.h"
 #include "../include/logger.h"
-#include "../include/server.h"
+#include "../include/server.hpp"
 #include "../include/client.hpp"
 
 using namespace std;
@@ -48,7 +48,8 @@ int main(int argc, char **argv)
 	/*Start Here*/
 	if(argv[1] == "s")
 	{
-		server_init(argc, argv);
+		server serverObj = new server();
+		serverObj.server_init(argc, argv);
 	}
 	else if(argv[1] == "c")
 	{
