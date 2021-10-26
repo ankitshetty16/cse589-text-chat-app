@@ -48,8 +48,8 @@ int main(int argc, char **argv)
 	/*Start Here*/
 	if(argv[1] == "s")
 	{
-		server serverObj = new server();
-		serverObj.server_init(argc, argv);
+		server* serverObj = new server();
+		serverObj->server_init(argc, argv);
 	}
 	else if(argv[1] == "c")
 	{
