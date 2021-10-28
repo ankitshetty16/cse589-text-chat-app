@@ -1,6 +1,8 @@
 #ifndef SERVER_HPP_
 #define SERVER_HPP_
 
+using namespace std;
+
 class server { 
     static server* mpInstance;
     

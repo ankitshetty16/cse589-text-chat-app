@@ -58,7 +58,7 @@ void client :: client_init(int argc, char **argv)
 	client* pClientobj = client::getInstance();
 	cout << "Inside client init"<<endl;
 	//connect_to_host(argv[1], argv[2]);
-	pClientobj->connectToServer("127.0.0.1","4566");
+	pClientobj->connectToServer("128.205.36.46","4322");
 	
 	while(TRUE){
 		printf("\n[PA1-Client@CSE489/589]$ ");
@@ -106,7 +106,6 @@ void client :: connectToServer(char *server_ip, char* server_port)
 	fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if(fdsocket < 0)
 		perror("Failed to create socket");
-	
 	/* Connect */
 	if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
 		perror("Connect failed");

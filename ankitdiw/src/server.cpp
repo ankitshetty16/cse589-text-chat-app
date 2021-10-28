@@ -31,12 +31,22 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <../include/server.hpp>
 
 #define BACKLOG 5
 #define STDIN 0
 #define TRUE 1
 #define CMD_SIZE 100
 #define BUFFER_SIZE 256
+
+server* server::mpInstance = NULL;
+server* server::getInstance() 
+{
+   if (mpInstance == NULL) {
+      mpInstance = new server();
+   }
+   return(mpInstance);
+}
 
 /**
 * main function
@@ -45,7 +55,7 @@
 * @param  argv The argument list
 * @return 0 EXIT_SUCCESS
 */
-int server_init(int argc, char **argv)
+void server :: server_init(int argc, char **argv)
 {	
 	if(argc != 3) {
 		printf("Usage:%s [port]\n", argv[1]);
@@ -65,7 +75,6 @@ int server_init(int argc, char **argv)
     	hints.ai_flags = AI_PASSIVE;
 
 	/* Fill up address structures */
-	std::cout << "Printing getaddrinfo " << *argv[2] << "\n";
 	if (getaddrinfo(NULL, argv[2], &hints, &res) != 0)
 		perror("getaddrinfo failed");
 	
@@ -83,7 +92,6 @@ int server_init(int argc, char **argv)
 	/* Listen */
 	if(listen(server_socket, BACKLOG) < 0)
 		perror("Unable to listen on port");
-	
 	/* ---------------------------------------------------------------------------- */
 	
 	/* Zero select FD sets */
@@ -99,10 +107,8 @@ int server_init(int argc, char **argv)
 	
 	while(TRUE){
 		memcpy(&watch_list, &master_list, sizeof(master_list));
-		
 		//printf("\n[PA1-Server@CSE489/589]$ ");
 		//fflush(stdout);
-		
 		/* select() system call. This will BLOCK */
 		selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL);
 		if(selret < 0)
@@ -114,7 +120,8 @@ int server_init(int argc, char **argv)
 			for(sock_index=0; sock_index<=head_socket; sock_index+=1){
 				
 				if(FD_ISSET(sock_index, &watch_list)){
-					
+					std::cout << "SOCK_INDEX  >>>> " << sock_index << "\n";
+					std::cout << "STDIN >>>> " << STDIN << "\n";
 					/* Check if new command on STDIN */
 					if (sock_index == STDIN){
 						char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
@@ -172,6 +179,4 @@ int server_init(int argc, char **argv)
 			}
 		}
 	}
-	
-	return 0;
 }
