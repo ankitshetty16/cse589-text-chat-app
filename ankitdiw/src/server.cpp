@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <../include/server.hpp>
+#include <../include/commands.hpp>
 
 #define BACKLOG 5
 #define STDIN 0
@@ -90,10 +91,11 @@ void server :: server_init(int argc, char **argv)
 	freeaddrinfo(res);
 	
 	/* Listen */
+	printf("\n[PA1-SERVER@CSE489/589]$ ");
+	fflush(stdout);	
 	if(listen(server_socket, BACKLOG) < 0)
 		perror("Unable to listen on port");
 	/* ---------------------------------------------------------------------------- */
-	
 	/* Zero select FD sets */
 	FD_ZERO(&master_list);
 	FD_ZERO(&watch_list);
@@ -104,11 +106,8 @@ void server :: server_init(int argc, char **argv)
 	FD_SET(STDIN, &master_list);
 	
 	head_socket = server_socket;
-	
 	while(TRUE){
 		memcpy(&watch_list, &master_list, sizeof(master_list));
-		//printf("\n[PA1-Server@CSE489/589]$ ");
-		//fflush(stdout);
 		/* select() system call. This will BLOCK */
 		selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL);
 		if(selret < 0)
@@ -120,8 +119,6 @@ void server :: server_init(int argc, char **argv)
 			for(sock_index=0; sock_index<=head_socket; sock_index+=1){
 				
 				if(FD_ISSET(sock_index, &watch_list)){
-					std::cout << "SOCK_INDEX  >>>> " << sock_index << "\n";
-					std::cout << "STDIN >>>> " << STDIN << "\n";
 					/* Check if new command on STDIN */
 					if (sock_index == STDIN){
 						char *cmd = (char*) malloc(sizeof(char)*CMD_SIZE);
@@ -133,8 +130,12 @@ void server :: server_init(int argc, char **argv)
 						printf("\nI got: %s\n", cmd);
 						
 						//Process PA1 commands here ...
-                        printf("PA1 commands to be added here......");
-						
+                        printf("PA1 commands to be added here......\n");
+						commands c;
+						string response = c.init("s",cmd);
+						printf("RESPONSE->>>>>>>>>");
+						// printf(response);
+						cout << response;
 						free(cmd);
 					}
 					/* Check if new client is requesting connection */
@@ -159,7 +160,7 @@ void server :: server_init(int argc, char **argv)
 						if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
-							
+
 							/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
 						}
@@ -167,7 +168,7 @@ void server :: server_init(int argc, char **argv)
 							//Process incoming data from existing clients here ...
 							
 							printf("\nClient sent me: %s\n", buffer);
-							printf("ECHOing it back to the remote host ... ");
+							printf("ECHOing it back to the remote host ... \n");
 							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
 								printf("Done!\n");
 							fflush(stdout);
@@ -178,5 +179,7 @@ void server :: server_init(int argc, char **argv)
 				}
 			}
 		}
+	printf("\n[PA1-SERVER@CSE489/589]$ ");
+	fflush(stdout);
 	}
 }
