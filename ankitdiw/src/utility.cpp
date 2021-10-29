@@ -3,6 +3,7 @@
 msgType getMsgType(std::string msg)
 {
     msgType m;
+    cout<<msg<<"\n";
     if(msg == "AUTHOR")
     {
         m = AUTHOR;

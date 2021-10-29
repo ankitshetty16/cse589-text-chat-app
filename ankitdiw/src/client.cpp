@@ -55,7 +55,7 @@ void client :: client_init(int argc, char **argv)
 		exit(-1);
 	}
 	client* pClientobj = client::getInstance();
-	commands cmdObj = new commands();
+	commands cmdObj;
 	cout << "Inside client init"<<endl;
 	//connect_to_host(argv[1], argv[2]);
 	/*
@@ -88,11 +88,27 @@ void client :: client_init(int argc, char **argv)
 		*/
 	memset(&pClientobj->server,0,sizeof(int));
 	memset(&pClientobj->isServerConnected,0,sizeof(bool));
-	memset(&pClientobj->listeningPort,0,sizeof(int));
-	pClientobj->listeningPort = argv[2];
+	//memset(&pClientobj->listeningPort,0,sizeof(int));
+	cout << " before listen port"<<endl;
+	// std:: string port = argv[2];
+	// cout <<"portt------>";
+	// cout << port;
+	// cout << strlen(argv[2]);
+	// cout << argv[2];
+	// cout << *argv[2];
+	//pClientobj->listeningPort = argv[2];
+	std::vector<std::string> comArg;
+	comArg.assign(argv + 1, argv + argc);
+	cout<<"comArg----->"<<endl;
+	cout<<comArg[0];
+	cout<<comArg[1];
+	pClientobj->listeningPort = comArg[1];
+	//cout <<"after listen port \n";
 	std::vector<std::string> commandArgv;
 	while(1)
 	{	
+		//cout<<"inside while\n";
+		commandArgv.clear();
 		std::string command;
 		std::getline(std::cin,command);
 		int arg_count = 0;
@@ -105,31 +121,33 @@ void client :: client_init(int argc, char **argv)
 			arg_count += 1;
 		}
 		msgType msg = getMsgType(commandArgv[0]);
-
+		cout<<"MSG TYPE ------------>"<<msg<<endl;
 		switch(msg)
 		{
-			case AUTHOR:   
-						    cmdObj.getAuthor();
+			case AUTHOR:   	cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+							//cmdObj.getAuthor();
 						    break;
-			case PORT:      cmdObj.getPort(pClientobj->listeningPort);
+			case PORT:      cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+							cse4589_print_and_log("[%s:PORT]\n", pClientobj->listeningPort.c_str());
+							//cmdObj.getPort(pClientobj->listeningPort);
 							break;
 			case IP:      
-							struct addrinfo hints,*res
-							memset(&hints, 0, sizeof(hints));
-							hints.ai_family = AF_INET;
-							hints.ai_socktype = SOCK_STREAM;
-							char* server_ip = "8.8.8.8"
-							char* server_port = "53"
-							if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
-								perror("getaddrinfo failed");
-							/* Socket */
-							fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-							if(fdsocket < 0)
-								perror("Failed to create socket");
+							// struct addrinfo hints,*res
+							// memset(&hints, 0, sizeof(hints));
+							// hints.ai_family = AF_INET;
+							// hints.ai_socktype = SOCK_STREAM;
+							// char* server_ip = "8.8.8.8"
+							// char* server_port = "53"
+							// if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
+							// 	perror("getaddrinfo failed");
+							// /* Socket */
+							// fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+							// if(fdsocket < 0)
+							// 	perror("Failed to create socket");
 	
-							/* Connect */
-							if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
-								perror("Connect failed");
+							// /* Connect */
+							// if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
+							// 	perror("Connect failed");
 							break;
 			case EXIT: 	cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
 						 	return;

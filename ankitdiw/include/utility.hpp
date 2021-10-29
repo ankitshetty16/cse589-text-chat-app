@@ -2,11 +2,12 @@
 #define UTILITY_HPP_
 
 #include <iostream>
-//include <stdio.h>
-//include <stdlib.h>
-//include <strings.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
 #include <string.h>
 
+using namespace std;
 enum msgType
 {
     AUTHOR,
