@@ -10,6 +10,12 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include "../include/logger.h"
+#include <vector>
+#include <sstream>
+#include "../include/utility.hpp"
+#include "../include/commands.hpp"
+//#include <conio.h>
 
 using namespace std;
 
@@ -17,6 +23,8 @@ class client
 {
     static client* mpInstance;
     int server;
+    bool isServerConnected;
+    std::string listeningPort;
 
     public:
     // This is how clients can access the single instance
