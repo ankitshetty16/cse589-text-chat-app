@@ -33,6 +33,10 @@
 #include <netdb.h>
 #include <../include/server.hpp>
 #include <../include/commands.hpp>
+#include <../include/utility.hpp>
+#include <../include/logger.h>
+#include <typeinfo>
+#include <vector>
 
 #define BACKLOG 5
 #define STDIN 0
@@ -128,14 +132,38 @@ void server :: server_init(int argc, char **argv)
 							exit(-1);
 						
 						printf("\nI got: %s\n", cmd);
-						
+
 						//Process PA1 commands here ...
-                        printf("PA1 commands to be added here......\n");
-						commands c;
-						string response = c.init("s",cmd);
-						printf("RESPONSE->>>>>>>>>");
-						// printf(response);
-						cout << response;
+						commands cmdObj;
+						char *arg = strtok(cmd," ");
+						std::string token;
+						std::vector<std::string> cmdArgv;
+						while(arg != NULL){
+							token = arg;
+							int len = token.length();
+							if(token[len-1] == '\n')
+							{
+								token.erase(len-1);
+							}
+							cmdArgv.push_back(token);
+							arg = strtok(NULL," ");
+						}
+						msgType msg;
+						memset(&msg, 0, sizeof(msgType));
+						msg = getMsgType(cmdArgv[0]);
+						//Processing PA1 SERVER COMMANDS Here
+						switch(msg) {
+							case AUTHOR:
+								cmdObj.getAuthor(cmdArgv[0]);
+								break;
+							case PORT:
+								cmdObj.getPort("4322", cmdArgv[0]);
+								break;								
+							case NOTFOUND:
+								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
+								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
+								break;
+						}
 						free(cmd);
 					}
 					/* Check if new client is requesting connection */

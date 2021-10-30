@@ -3,7 +3,6 @@
 msgType getMsgType(std::string msg)
 {
     msgType m;
-    cout<<msg<<"\n";
     if(msg == "AUTHOR")
     {
         m = AUTHOR;
@@ -76,6 +75,7 @@ msgType getMsgType(std::string msg)
     }
     else
     {
+        cout << "NOT FOUND";
         m = NOTFOUND;
         return m;
     }

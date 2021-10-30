@@ -5,7 +5,8 @@ using namespace std;
 
 class commands {
     public:
-    string init(string type, char* command);
+    void getAuthor(string command);
+    void getPort(string port, string command);
 };
 
 #endif

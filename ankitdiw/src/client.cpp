@@ -56,7 +56,6 @@ void client :: client_init(int argc, char **argv)
 	}
 	client* pClientobj = client::getInstance();
 	commands cmdObj;
-	cout << "Inside client init"<<endl;
 	//connect_to_host(argv[1], argv[2]);
 	/*
 	pClientobj->connectToServer("127.0.0.1","4566");
@@ -89,7 +88,7 @@ void client :: client_init(int argc, char **argv)
 	memset(&pClientobj->server,0,sizeof(int));
 	memset(&pClientobj->isServerConnected,0,sizeof(bool));
 	//memset(&pClientobj->listeningPort,0,sizeof(int));
-	cout << " before listen port"<<endl;
+	//cout << " before listen port"<<endl;
 	// std:: string port = argv[2];
 	// cout <<"portt------>";
 	// cout << port;
@@ -99,14 +98,16 @@ void client :: client_init(int argc, char **argv)
 	//pClientobj->listeningPort = argv[2];
 	std::vector<std::string> comArg;
 	comArg.assign(argv + 1, argv + argc);
-	cout<<"comArg----->"<<endl;
-	cout<<comArg[0];
-	cout<<comArg[1];
+	//cout<<"comArg----->"<<endl;
+	//cout<<comArg[0];
+	//cout<<comArg[1];
 	pClientobj->listeningPort = comArg[1];
 	//cout <<"after listen port \n";
 	std::vector<std::string> commandArgv;
 	while(1)
-	{	
+	{
+		printf("\n[PA1-CLIENT@CSE489/589]$ ");
+		fflush(stdout);
 		//cout<<"inside while\n";
 		commandArgv.clear();
 		std::string command;
@@ -121,17 +122,16 @@ void client :: client_init(int argc, char **argv)
 			arg_count += 1;
 		}
 		msgType msg = getMsgType(commandArgv[0]);
-		cout<<"MSG TYPE ------------>"<<msg<<endl;
+		//cout<<"MSG TYPE ------------>"<<msg<<endl;
 		switch(msg)
 		{
-			case AUTHOR:   	cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
-							//cmdObj.getAuthor();
-						    break;
-			case PORT:      cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
-							cse4589_print_and_log("[%s:PORT]\n", pClientobj->listeningPort.c_str());
-							//cmdObj.getPort(pClientobj->listeningPort);
-							break;
-			case IP:      
+			case AUTHOR:   	
+				cmdObj.getAuthor(commandArgv[0]);
+				break;
+			case PORT:
+				cmdObj.getPort(pClientobj->listeningPort, commandArgv[0]);
+				break;
+			case IP:
 							// struct addrinfo hints,*res
 							// memset(&hints, 0, sizeof(hints));
 							// hints.ai_family = AF_INET;
