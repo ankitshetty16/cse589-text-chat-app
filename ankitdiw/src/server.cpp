@@ -157,8 +157,11 @@ void server :: server_init(int argc, char **argv)
 								cmdObj.getAuthor(cmdArgv[0]);
 								break;
 							case PORT:
-								cmdObj.getPort("4322", cmdArgv[0]);
-								break;								
+								cmdObj.getPort(argv[2], cmdArgv[0]);
+								break;
+							case IP:
+								cmdObj.getIp(cmdArgv[0]);
+								break;							
 							case NOTFOUND:
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
 								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
