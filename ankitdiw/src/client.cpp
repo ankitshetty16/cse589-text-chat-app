@@ -87,15 +87,7 @@ void client :: client_init(int argc, char **argv)
 		*/
 	memset(&pClientobj->server,0,sizeof(int));
 	memset(&pClientobj->isServerConnected,0,sizeof(bool));
-	//memset(&pClientobj->listeningPort,0,sizeof(int));
-	//cout << " before listen port"<<endl;
-	// std:: string port = argv[2];
-	// cout <<"portt------>";
-	// cout << port;
-	// cout << strlen(argv[2]);
-	// cout << argv[2];
-	// cout << *argv[2];
-	//pClientobj->listeningPort = argv[2];
+	
 	std::vector<std::string> comArg;
 	comArg.assign(argv + 1, argv + argc);
 	//cout<<"comArg----->"<<endl;
@@ -145,9 +137,15 @@ void client :: client_init(int argc, char **argv)
 							// if(fdsocket < 0)
 							// 	perror("Failed to create socket");
 	
-							// /* Connect */
-							// if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
-							// 	perror("Connect failed");
+							/* Connect */
+							if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
+								perror("Connect failed");
+							char hostname[80];
+							int len;
+							// if(getsockname((char*)hostname, s)!=0)
+							// 	perror("Get HostName failed");
+							if(getsockname(fdsocket,resIp,len) != 0)
+								perror("Get socket name failed");
 							break;
 			case EXIT: 	cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
 						 	return;
