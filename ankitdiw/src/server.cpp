@@ -45,6 +45,7 @@
 #define BUFFER_SIZE 256
 
 server* server::mpInstance = NULL;
+commands cmdObj;
 server* server::getInstance() 
 {
    if (mpInstance == NULL) {
@@ -116,7 +117,7 @@ void server :: server_init(int argc, char **argv)
 		selret = select(head_socket + 1, &watch_list, NULL, NULL, NULL);
 		if(selret < 0)
 			perror("select failed.");
-		
+
 		/* Check if we have sockets/STDIN to process */
 		if(selret > 0){
 			/* Loop through socket descriptors to check which ones are ready */
@@ -134,7 +135,6 @@ void server :: server_init(int argc, char **argv)
 						printf("\nI got: %s\n", cmd);
 
 						//Process PA1 commands here ...
-						commands cmdObj;
 						char *arg = strtok(cmd," ");
 						std::string token;
 						std::vector<std::string> cmdArgv;
@@ -161,7 +161,10 @@ void server :: server_init(int argc, char **argv)
 								break;
 							case IP:
 								cmdObj.getIp(cmdArgv[0]);
-								break;							
+								break;
+							case LIST:
+								cmdObj.getList(cmdArgv[0]);
+								break;			
 							case NOTFOUND:
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
 								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
@@ -176,8 +179,10 @@ void server :: server_init(int argc, char **argv)
 						if(fdaccept < 0)
 							perror("Accept failed.");
 						
-						printf("\nRemote Host connected!\n");                        
-						
+						printf("\nRemote Host connected!");                      
+						// Add new client to list of clients
+						cmdObj.addList(client_addr);
+						            
 						/* Add to watched socket list */
 						FD_SET(fdaccept, &master_list);
 						if(fdaccept > head_socket) head_socket = fdaccept;
@@ -191,6 +196,8 @@ void server :: server_init(int argc, char **argv)
 						if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
+							// Remove client from list of clients
+							cmdObj.removeList(client_addr);
 
 							/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
@@ -201,7 +208,11 @@ void server :: server_init(int argc, char **argv)
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... \n");
 							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
-								printf("Done!\n");
+								// string test = "Beej was here!";
+								// int len, bytes_sent;
+								// len = strlen(test);
+								// bytes_sent = send(fdaccept, msg, len, 0);
+								// printf("Done!\n");
 							fflush(stdout);
 						}
 						

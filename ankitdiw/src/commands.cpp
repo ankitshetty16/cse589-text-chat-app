@@ -1,20 +1,27 @@
-#include <stdio.h>
-#include <string>
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
-#include <algorithm>
-#include <iostream>
+
 #include <../include/commands.hpp>
-#include <../include/logger.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
 using namespace std;
 
 #define S_ADDRESS "8.8.8.8"
 #define S_PORT 53
+
+class client
+{
+    public:
+    string ip;
+    string domain;
+    int port;
+
+    public:
+    client(string ip, string domain, int port) {
+        this->ip = ip;
+        this->domain = domain;
+        this->port = port;
+    }
+};
+
+list<client> clientList;
 
 /**
 Function for generic commands
@@ -92,4 +99,56 @@ void commands::getPort(string port,string command){
     cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
     cse4589_print_and_log("PORT:%s\n", port.c_str());
     cse4589_print_and_log("[%s:END]\n", command.c_str());
+}
+
+/**
+* To add to List of available clients
+*/
+void commands::addList(sockaddr_in client_addr){
+        char myIP[16], host[1024], service[20];    
+        unsigned int myPort;
+        
+        // To get client related details and add to list
+        inet_ntop(AF_INET, &client_addr.sin_addr, myIP, sizeof(myIP));
+        myPort = ntohs(client_addr.sin_port);
+        getnameinfo((struct sockaddr*)&client_addr, sizeof(client_addr), host, sizeof(host), service, sizeof(service), 0);
+        client c((string)myIP,host,myPort);
+        clientList.push_back(c);
+
+    // //For printing the list of servers available
+    // int index = 0;
+    // for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++){
+    //     cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
+    // }
+    // cse4589_print_and_log("[%s:SUCCESS]\n");
+    // cse4589_print_and_log("IP:%s\n", myIP);
+    // cse4589_print_and_log("[%s:END]\n","adsad");
+}
+
+/**
+* To remove client from list of available clients
+*/
+void commands::removeList(sockaddr_in client_addr){
+    printf("REMOVE LIST functionality");
+}
+
+/**
+* To print the list of clients available
+*/
+void commands::getList(string command){
+    // For printing the list of servers available
+    int index = 0;
+    cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
+    for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+        cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
+    }
+    cse4589_print_and_log("[%s:END]\n", command.c_str());
+}
+
+/**
+* To return the list of clients available
+*/
+void commands::returnList(){
+    // return clientList;
+    printf("RETURN LIST>>>>>>");
 }
