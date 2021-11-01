@@ -26,6 +26,8 @@
 #define TRUE 1
 #define MSG_SIZE 256
 #define BUFFER_SIZE 256
+#define STDIN 0
+#define FALSE 0
 
 using namespace std;
 
@@ -55,7 +57,6 @@ void client :: client_init(int argc, char **argv)
 		exit(-1);
 	}
 	client* pClientobj = client::getInstance();
-	commands cmdObj;
 	//connect_to_host(argv[1], argv[2]);
 	/*
 	pClientobj->connectToServer("127.0.0.1","4566");
@@ -85,77 +86,65 @@ void client :: client_init(int argc, char **argv)
 			fflush(stdout);
 		}
 		*/
-	memset(&pClientobj->server,0,sizeof(int));
+	memset(&pClientobj->serverSocket,0,sizeof(int));
 	memset(&pClientobj->isServerConnected,0,sizeof(bool));
 	
 	std::vector<std::string> comArg;
 	comArg.assign(argv + 1, argv + argc);
-	//cout<<"comArg----->"<<endl;
-	//cout<<comArg[0];
-	//cout<<comArg[1];
 	pClientobj->listeningPort = comArg[1];
-	//cout <<"after listen port \n";
-	std::vector<std::string> commandArgv;
-	while(1)
-	{
-		printf("\n[PA1-CLIENT@CSE489/589]$ ");
-		fflush(stdout);
-		//cout<<"inside while\n";
-		commandArgv.clear();
-		std::string command;
-		std::getline(std::cin,command);
-		int arg_count = 0;
-		std::istringstream iss(command);
-		std::string token;
-		//char* arg = strtok(&command.c_str()," ");
-		while(std::getline(iss, token, ' '))
-		{
-			commandArgv.push_back(token);
-			arg_count += 1;
-		}
-		msgType msg = getMsgType(commandArgv[0]);
-		//cout<<"MSG TYPE ------------>"<<msg<<endl;
-		switch(msg)
-		{
-			case AUTHOR:   	
-				cmdObj.getAuthor(commandArgv[0]);
-				break;
-			case PORT:
-				cmdObj.getPort(pClientobj->listeningPort, commandArgv[0]);
-				break;
-			case IP:
-							// struct addrinfo hints,*res
-							// memset(&hints, 0, sizeof(hints));
-							// hints.ai_family = AF_INET;
-							// hints.ai_socktype = SOCK_STREAM;
-							// char* server_ip = "8.8.8.8"
-							// char* server_port = "53"
-							// if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
-							// 	perror("getaddrinfo failed");
-							// /* Socket */
-							// fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-							// if(fdsocket < 0)
-							// 	perror("Failed to create socket");
+	/* Zero select FD sets */
+	FD_ZERO(&pClientobj->masterList);
+	FD_ZERO(&pClientobj->watchList);
 	
-							/* Connect */
-							if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
-								perror("Connect failed");
-							char hostname[80];
-							int len;
-							// if(getsockname((char*)hostname, s)!=0)
-							// 	perror("Get HostName failed");
-							if(getsockname(fdsocket,resIp,len) != 0)
-								perror("Get socket name failed");
-							break;
-			case EXIT: 	cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
-						 	return;
+	/* Register STDIN */
+	FD_SET(STDIN, &pClientobj->masterList);
+	
+	pClientobj->headSocket = 0;
+	printf("\n[PA1-CLIENT@CSE489/589]$ ");
+	fflush(stdout);
+	cout<<pClientobj->listeningPort<<"\n";
+	int selret,sock_index;
 
+	while(1)
+	{	
+		cout<<"Inside while\n";
+		memcpy(&pClientobj->watchList, &pClientobj->masterList, sizeof(pClientobj->masterList));
+		selret = select(pClientobj->headSocket + 1, &pClientobj->watchList, NULL, NULL, NULL);
+		if(selret < 0)
+			perror("select failed.");
+		cout<<"Selret = "<<selret<<"\n";
+		/* Check if we have sockets/STDIN to process */
+		if(selret > 0)
+		{	
+			cout<<"Inside If selret\n";
+			/* Loop through socket descriptors to check which ones are ready */
+			for(sock_index=0; sock_index<=pClientobj->headSocket; sock_index+=1)
+			{	
+				cout<<"Inside for\n";
+				if(FD_ISSET(sock_index, &pClientobj->watchList))
+				{
+					/* Check if new command on STDIN */
+					if (sock_index == STDIN)
+					{
+						pClientobj->handleStdinCmd();
+					}
+					else if(sock_index == pClientobj->serverSocket)
+					{
+						//Handle once server is configured
+					}
+					else
+					{
+						cout << "INVALID SOCKET!!!!!!!!!!!!!!!!!!!!"<<endl;
+					}
+				}
+			}
 		}
-
+		printf("\n[PA1-SERVER@CSE489/589]$ ");
+		fflush(stdout);
 	}
 }
 
-void client :: connectToServer(char *server_ip, char* server_port)
+int client :: connectToServer(const char *server_ip, const char* server_port)
 {
 	int fdsocket;
 	struct addrinfo hints, *res;
@@ -168,18 +157,140 @@ void client :: connectToServer(char *server_ip, char* server_port)
 
 	/* Fill up address structures */	
 	if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
+	{
 		perror("getaddrinfo failed");
-
+		return FALSE;
+	}
 	/* Socket */
 	fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if(fdsocket < 0)
+	{
 		perror("Failed to create socket");
-	
+		return FALSE;
+	}
 	/* Connect */
 	if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
+	{
 		perror("Connect failed");
-	
+		return FALSE;
+	}
 	freeaddrinfo(res);
 
-	client::getInstance()->server = fdsocket;
+	client::getInstance()->serverSocket = fdsocket;
+	return TRUE;
+
+}
+
+int isValidIp(std::string ip)
+{	
+	struct sockaddr_in sa;
+	
+	// store this IP address in sa:
+	//cout<<"received ip:"<<ip<<endl;
+	int res = inet_pton(AF_INET, ip.c_str(), &(sa.sin_addr));
+	if(res == TRUE)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+int isValidPort(std::string port)
+{
+	for(int i = 0; i < port.length(); ++i)
+	{
+		if(!isdigit(port[i]))
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+void client :: handleStdinCmd()
+{	
+	cout<<"Inside HandleStdin\n";
+	client* pClientobj = client::getInstance();
+	std::vector<std::string> commandArgv;
+	commands cmdObj;
+	commandArgv.clear();
+	std::string command;
+	std::getline(std::cin,command);
+	int arg_count = 0;
+	std::istringstream iss(command);
+	std::string token;
+	while(std::getline(iss, token, ' '))
+	{
+		commandArgv.push_back(token);
+		arg_count += 1;
+	}
+	msgType msg = getMsgType(commandArgv[0]);
+	switch(msg)
+	{
+		case AUTHOR:   	
+			cmdObj.getAuthor(commandArgv[0]);
+			break;
+		case PORT:
+			cmdObj.getPort(pClientobj->listeningPort, commandArgv[0]);
+			break;
+		case IP:
+			//cmdObj.getIP(commandArgv[0]);
+			break;
+		case LOGIN:
+			if(!isValidIp(commandArgv[1]))
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			if(!isValidPort(commandArgv[2]))
+			{	
+				cout<<"it's a valid ip\n";
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			if(!pClientobj->connectToServer(commandArgv[1].c_str(),commandArgv[2].c_str()))
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			pClientobj->isServerConnected = TRUE;
+			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+    		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			cout<<"Connected to server\n";
+			break;
+
+		case SEND:
+			if(!pClientobj->isServerConnected)
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			if(!isValidIp(commandArgv[1]))
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			printf("\nSENDing it to the remote server ... \n");
+			if(send(client::getInstance()->serverSocket, commandArgv[2].c_str(), commandArgv[2].length(), 0) > 0)
+			{
+				printf("Done!\n");
+				cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+				cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			}
+			else
+			{	
+				cout<<"Msg not sent to server\n";
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			}
+			break;
+		case EXIT: 	
+			cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
+			return;
+
+	}
 }

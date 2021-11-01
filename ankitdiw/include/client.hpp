@@ -15,6 +15,8 @@
 #include <sstream>
 #include "../include/utility.hpp"
 #include "../include/commands.hpp"
+#include <netinet/in.h>
+//#include <regex>
 //#include <conio.h>
 
 using namespace std;
@@ -22,15 +24,19 @@ using namespace std;
 class client
 {
     static client* mpInstance;
-    int server;
+    int serverSocket;
     bool isServerConnected;
     std::string listeningPort;
+    fd_set masterList,watchList;
+    int headSocket;
+
 
     public:
     // This is how clients can access the single instance
     static client* getInstance();
-    void connectToServer(char *server_ip,char* server_port);
+    int connectToServer(const char *server_ip,const char* server_port);
     void client_init(int argc, char **argv);
+    void handleStdinCmd();
 
 };
 
