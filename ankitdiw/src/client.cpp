@@ -1,6 +1,6 @@
 /**
 * @client
-* @author  Swetank Kumar Saha <swetankk@buffalo.edu>, Shivang Aggarwal <shivanga@buffalo.edu>
+* @author  Adithya Venkatesh <venkate9@buffalo.edu>
 * @version 1.0
 *
 * @section LICENSE
@@ -107,7 +107,6 @@ void client :: client_init(int argc, char **argv)
 
 	while(1)
 	{	
-		cout<<"Inside while\n";
 		memcpy(&pClientobj->watchList, &pClientobj->masterList, sizeof(pClientobj->masterList));
 		selret = select(pClientobj->headSocket + 1, &pClientobj->watchList, NULL, NULL, NULL);
 		if(selret < 0)
@@ -147,7 +146,7 @@ void client :: client_init(int argc, char **argv)
                         else {
                             //Process incoming data from existing clients here ...
                             
-                            printf("\SERVER sent me: %s\n", buffer);
+                            printf("SERVER sent me: %s\n", buffer);
                             printf("ECHOing it back to the remote host ... \n");
                             //if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
                                 // string test = "Beej was here!";
@@ -305,7 +304,7 @@ void client :: handleStdinCmd()
 				break;
 			}
 			printf("\nSENDing it to the remote server ... \n");
-			if(send(client::getInstance()->serverSocket, commandArgv[2].c_str(), commandArgv[2].length(), 0) > 0)
+			if(send(pClientobj->serverSocket, commandArgv[2].c_str(), commandArgv[2].length(), 0) > 0)
 			{
 				printf("Done!\n");
 				cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
@@ -318,9 +317,32 @@ void client :: handleStdinCmd()
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			}
 			break;
-		case EXIT: 	
+		case LOGOUT:
+			if(!pClientobj->isServerConnected)
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			close(pClientobj->serverSocket);
+			printf("Remote Host terminated connection!\n");
+			// Remove client from list of clients
+
+			/* Remove from watched list */
+			FD_CLR(pClientobj->serverSocket, &pClientobj->masterList);
+			pClientobj->headSocket = 0;
+			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+    		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			break;
+		case EXIT:
+			if(pClientobj->isServerConnected)
+			{
+				close(pClientobj->serverSocket);
+				FD_CLR(pClientobj->serverSocket, &pClientobj->masterList);
+			}
 			cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
-			return;
+			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			exit(0);
 
 	}
 }
