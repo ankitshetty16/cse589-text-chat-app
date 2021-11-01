@@ -148,7 +148,9 @@ void commands::getList(string command){
 /**
 * To return the list of clients available
 */
-void commands::returnList(){
-    // return clientList;
-    printf("RETURN LIST>>>>>>");
+string commands::returnList(){
+    // for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+    //     cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
+    // }
+    return "TEST RETURN";
 }

@@ -166,6 +166,8 @@ void server :: server_init(int argc, char **argv)
 								cmdObj.getList(cmdArgv[0]);
 								break;			
 							case NOTFOUND:
+								string response = cmdObj.returnList();
+								cout << response << endl;
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
 								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
 								break;
@@ -182,6 +184,10 @@ void server :: server_init(int argc, char **argv)
 						printf("\nRemote Host connected!");                      
 						// Add new client to list of clients
 						cmdObj.addList(client_addr);
+						string test = "Beej was here!";
+						int len, bytes_sent;
+						len = strlen(test.c_str());
+						bytes_sent = send(fdaccept, test.c_str(), len, 0);
 						            
 						/* Add to watched socket list */
 						FD_SET(fdaccept, &master_list);
@@ -208,11 +214,7 @@ void server :: server_init(int argc, char **argv)
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... \n");
 							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
-								// string test = "Beej was here!";
-								// int len, bytes_sent;
-								// len = strlen(test);
-								// bytes_sent = send(fdaccept, msg, len, 0);
-								// printf("Done!\n");
+								printf("Done!\n");
 							fflush(stdout);
 						}
 						

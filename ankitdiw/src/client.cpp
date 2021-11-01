@@ -131,6 +131,34 @@ void client :: client_init(int argc, char **argv)
 					else if(sock_index == pClientobj->serverSocket)
 					{
 						//Handle once server is configured
+						cout << "CHECKING SERVER SOCKET" << endl;
+						char *buffer = (char*) malloc(sizeof(char)*BUFFER_SIZE);
+                        memset(buffer, '\0', BUFFER_SIZE);
+                        
+                        if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
+                            close(sock_index);
+                            printf("Remote Host terminated connection!\n");
+                            // Remove client from list of clients
+                            //cmdObj.removeList(client_addr);
+
+                            /* Remove from watched list */
+                            // FD_CLR(sock_index, &master_list);
+                        }
+                        else {
+                            //Process incoming data from existing clients here ...
+                            
+                            printf("\SERVER sent me: %s\n", buffer);
+                            printf("ECHOing it back to the remote host ... \n");
+                            //if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
+                                // string test = "Beej was here!";
+                                // int len, bytes_sent;
+                                // len = strlen(test);
+                                // bytes_sent = send(fdaccept, msg, len, 0);
+                                // printf("Done!\n");
+                            //fflush(stdout);
+                        }
+                        
+                        free(buffer);						
 					}
 					else
 					{
@@ -233,7 +261,7 @@ void client :: handleStdinCmd()
 			cmdObj.getPort(pClientobj->listeningPort, commandArgv[0]);
 			break;
 		case IP:
-			//cmdObj.getIP(commandArgv[0]);
+			cmdObj.getIp(commandArgv[0]);
 			break;
 		case LOGIN:
 			if(!isValidIp(commandArgv[1]))
@@ -256,6 +284,8 @@ void client :: handleStdinCmd()
 				break;
 			}
 			pClientobj->isServerConnected = TRUE;
+			FD_SET(pClientobj->serverSocket, &pClientobj->masterList);
+			pClientobj->headSocket = pClientobj->serverSocket + 1;			
 			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
     		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			cout<<"Connected to server\n";

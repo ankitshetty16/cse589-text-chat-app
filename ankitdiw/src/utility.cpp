@@ -75,7 +75,6 @@ msgType getMsgType(std::string msg)
     }
     else
     {
-        cout << "NOT FOUND";
         m = NOTFOUND;
         return m;
     }

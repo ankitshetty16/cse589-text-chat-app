@@ -27,7 +27,7 @@ class commands {
     void addList(sockaddr_in client_addr);
     void removeList(sockaddr_in client_addr);
     void getList(string command);
-    void returnList();
+    string returnList();
 };
 
 #endif
