@@ -31,7 +31,7 @@ class commands {
     void getAuthor(string command);
     void getIp(string command);
     void getPort(string port, string command);
-    clientInfo addList(list<clientInfo> clientList, sockaddr_in client_addr);
+    void addList(list<clientInfo> &clientList, sockaddr_in client_addr);
     clientInfo removeList(list<clientInfo> clientList, sockaddr_in client_addr);
     void getList(list<clientInfo> clientList, string command);
     string returnList(list<clientInfo> clientList);

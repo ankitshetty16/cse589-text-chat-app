@@ -168,7 +168,8 @@ void server :: server_init(int argc, char **argv)
 						printf("\nRemote Host connected!");                      
 						// Add new client to list of clients
 						// list<clientInfo> temp = 
-						pServerobj->clientList.push_back(cmdObj.addList(pServerobj->clientList,client_addr));
+						cmdObj.addList(pServerobj->clientList,client_addr);
+						// pServerobj->clientList.push_back(cmdObj.addList(pServerobj->clientList,client_addr));
 						// return list of avilable clients on login
 						string response = cmdObj.returnList(pServerobj->clientList);
 						int len;

@@ -111,7 +111,7 @@ void commands::getPort(string port,string command){
 /**
 * To add to List of available clients
 */
-clientInfo commands::addList(list<clientInfo> clientList,sockaddr_in client_addr){
+void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr){
         char myIP[16], host[1024], service[20];    
         unsigned int myPort;
         
@@ -119,27 +119,14 @@ clientInfo commands::addList(list<clientInfo> clientList,sockaddr_in client_addr
         inet_ntop(AF_INET, &client_addr.sin_addr, myIP, sizeof(myIP));
         myPort = ntohs(client_addr.sin_port);
         getnameinfo((struct sockaddr*)&client_addr, sizeof(client_addr), host, sizeof(host), service, sizeof(service), 0);
-        // clientInfo c((string)myIP,host,myPort);
 
-        clientInfo temp;
-        temp.ip = string(myIP);
-        temp.domain = host;
-        temp.port = myPort;
+        clientInfo response;
+        response.ip = string(myIP);
+        response.domain = host;
+        response.port = myPort;
 
-        return temp;
-        // clientList.push_back(temp);
-
-        // return clientList;
-    
-
-    // //For printing the list of servers available
-    // int index = 0;
-    // for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++){
-    //     cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
-    // }
-    // cse4589_print_and_log("[%s:SUCCESS]\n");
-    // cse4589_print_and_log("IP:%s\n", myIP);
-    // cse4589_print_and_log("[%s:END]\n","adsad");
+        clientList.push_back(response);
+        // return response;
 }
 
 /**
