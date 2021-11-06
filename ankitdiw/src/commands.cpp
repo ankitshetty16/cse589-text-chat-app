@@ -145,7 +145,7 @@ clientInfo commands::addList(list<clientInfo> clientList,sockaddr_in client_addr
 /**
 * To remove client from list of available clients
 */
-list<clientInfo> commands::removeList(list<clientInfo> clientList, sockaddr_in client_addr){
+clientInfo commands::removeList(list<clientInfo> clientList, sockaddr_in client_addr){
     printf("REMOVE LIST functionality");
 }
 
