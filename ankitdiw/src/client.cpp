@@ -166,7 +166,7 @@ void client :: client_init(int argc, char **argv)
 				}
 			}
 		}
-		printf("\n[PA1-SERVER@CSE489/589]$ ");
+		printf("\n[PA1-CLIENT@CSE489/589]$ ");
 		fflush(stdout);
 	}
 }

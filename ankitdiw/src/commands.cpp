@@ -1,27 +1,27 @@
 
 #include <../include/commands.hpp>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
 #define S_ADDRESS "8.8.8.8"
 #define S_PORT 53
 
-class client
-{
-    public:
-    string ip;
-    string domain;
-    int port;
+// class clientInfo
+// {
+//     public:
+//     string ip;
+//     string domain;
+//     int port;
 
-    public:
-    client(string ip, string domain, int port) {
-        this->ip = ip;
-        this->domain = domain;
-        this->port = port;
-    }
-};
-
-list<client> clientList;
+//     public:
+//     clientInfo(string ip, string domain, int port) {
+//         this->ip = ip;
+//         this->domain = domain;
+//         this->port = port;
+//     }
+// };
 
 /**
 Function for generic commands
@@ -43,6 +43,13 @@ int isUppercase(char* command){
     };
     return uppercase;
 };
+
+string digitFormatter(int digit) {
+    stringstream ss;
+    ss << setw(3) << setfill('0') << digit;
+    string result = ss.str();
+    return result;
+}
 /**
 * To get Author details (common func for server & client)
 */
@@ -104,7 +111,7 @@ void commands::getPort(string port,string command){
 /**
 * To add to List of available clients
 */
-void commands::addList(sockaddr_in client_addr){
+clientInfo commands::addList(list<clientInfo> clientList,sockaddr_in client_addr){
         char myIP[16], host[1024], service[20];    
         unsigned int myPort;
         
@@ -112,8 +119,18 @@ void commands::addList(sockaddr_in client_addr){
         inet_ntop(AF_INET, &client_addr.sin_addr, myIP, sizeof(myIP));
         myPort = ntohs(client_addr.sin_port);
         getnameinfo((struct sockaddr*)&client_addr, sizeof(client_addr), host, sizeof(host), service, sizeof(service), 0);
-        client c((string)myIP,host,myPort);
-        clientList.push_back(c);
+        // clientInfo c((string)myIP,host,myPort);
+
+        clientInfo temp;
+        temp.ip = string(myIP);
+        temp.domain = host;
+        temp.port = myPort;
+
+        return temp;
+        // clientList.push_back(temp);
+
+        // return clientList;
+    
 
     // //For printing the list of servers available
     // int index = 0;
@@ -128,29 +145,39 @@ void commands::addList(sockaddr_in client_addr){
 /**
 * To remove client from list of available clients
 */
-void commands::removeList(sockaddr_in client_addr){
+list<clientInfo> commands::removeList(list<clientInfo> clientList, sockaddr_in client_addr){
     printf("REMOVE LIST functionality");
 }
 
 /**
 * To print the list of clients available
 */
-void commands::getList(string command){
+void commands::getList(list<clientInfo> clientList,string command){
     // For printing the list of servers available
-    int index = 0;
+    int index = 1;
     cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
-    for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+    for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
         cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
     }
     cse4589_print_and_log("[%s:END]\n", command.c_str());
 }
 
 /**
-* To return the list of clients available
+* To return the list of clients available to client on login
 */
-string commands::returnList(){
-    // for(list<client>::iterator i = clientList.begin(); i != clientList.end(); i++) {
-    //     cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
-    // }
-    return "TEST RETURN";
+string commands::returnList(list<clientInfo> clientList){
+    string response;
+    stringstream clSize;
+    clSize << setw(1) << setfill('0') << clientList.size();    
+    string start = "L"+clSize.str();
+    response.append(start.c_str());
+    for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+        string domain = i -> domain.c_str();
+        string ip = i -> ip.c_str();
+        stringstream port; 
+        port << i -> port;
+        string subString = digitFormatter(domain.length())+domain.c_str()+digitFormatter(ip.length())+ip.c_str()+digitFormatter(port.str().length())+port.str();
+        response.append(subString);
+    }
+    return response;
 }

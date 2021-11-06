@@ -19,15 +19,22 @@
 
 using namespace std;
 
+struct clientInfo
+{
+    string ip;
+    string domain;
+    int port;
+};
+
 class commands {
     public:
     void getAuthor(string command);
     void getIp(string command);
     void getPort(string port, string command);
-    void addList(sockaddr_in client_addr);
-    void removeList(sockaddr_in client_addr);
-    void getList(string command);
-    string returnList();
+    clientInfo addList(list<clientInfo> clientList, sockaddr_in client_addr);
+    clientInfo removeList(list<clientInfo> clientList, sockaddr_in client_addr);
+    void getList(list<clientInfo> clientList, string command);
+    string returnList(list<clientInfo> clientList);
 };
 
 #endif

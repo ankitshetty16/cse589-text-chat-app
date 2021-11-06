@@ -21,22 +21,7 @@
 * This file contains the server init and main while loop for tha application.
 * Uses the select() API to multiplex between network I/O and STDIN.
 */
-#include <stdio.h>
-#include <iostream>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <strings.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <netdb.h>
 #include <../include/server.hpp>
-#include <../include/commands.hpp>
-#include <../include/utility.hpp>
-#include <../include/logger.h>
-#include <typeinfo>
-#include <vector>
 
 #define BACKLOG 5
 #define STDIN 0
@@ -68,6 +53,7 @@ void server :: server_init(int argc, char **argv)
 		exit(-1);
 	}
 	
+	server* pServerobj = server::getInstance();
 	int server_socket, head_socket, selret, sock_index, fdaccept=0;
     socklen_t caddr_len;
 	struct sockaddr_in client_addr;
@@ -163,11 +149,9 @@ void server :: server_init(int argc, char **argv)
 								cmdObj.getIp(cmdArgv[0]);
 								break;
 							case LIST:
-								cmdObj.getList(cmdArgv[0]);
+								cmdObj.getList(pServerobj->clientList, cmdArgv[0]);
 								break;			
 							case NOTFOUND:
-								string response = cmdObj.returnList();
-								cout << response << endl;
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
 								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
 								break;
@@ -183,11 +167,13 @@ void server :: server_init(int argc, char **argv)
 						
 						printf("\nRemote Host connected!");                      
 						// Add new client to list of clients
-						cmdObj.addList(client_addr);
-						string test = "Beej was here!";
-						int len, bytes_sent;
-						len = strlen(test.c_str());
-						bytes_sent = send(fdaccept, test.c_str(), len, 0);
+						// list<clientInfo> temp = 
+						pServerobj->clientList.push_back(cmdObj.addList(pServerobj->clientList,client_addr));
+						// return list of avilable clients on login
+						string response = cmdObj.returnList(pServerobj->clientList);
+						int len;
+						len = strlen(response.c_str());
+						send(fdaccept, response.c_str(), len, 0);
 						            
 						/* Add to watched socket list */
 						FD_SET(fdaccept, &master_list);
@@ -203,7 +189,7 @@ void server :: server_init(int argc, char **argv)
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
 							// Remove client from list of clients
-							cmdObj.removeList(client_addr);
+							// pServerobj->clientList.assign(cmdObj.removeList(pServerobj->clientList, client_addr));
 
 							/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
