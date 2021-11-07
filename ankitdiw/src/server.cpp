@@ -166,19 +166,17 @@ void server :: server_init(int argc, char **argv)
 							perror("Accept failed.");
 						
 						printf("\nRemote Host connected!");                      
-						// Add new client to list of clients
-						// list<clientInfo> temp = 
-						cmdObj.addList(pServerobj->clientList,client_addr);
-						// pServerobj->clientList.push_back(cmdObj.addList(pServerobj->clientList,client_addr));
-						// return list of avilable clients on login
-						string response = cmdObj.returnList(pServerobj->clientList);
-						int len;
-						len = strlen(response.c_str());
-						send(fdaccept, response.c_str(), len, 0);
 						            
 						/* Add to watched socket list */
 						FD_SET(fdaccept, &master_list);
 						if(fdaccept > head_socket) head_socket = fdaccept;
+						// Add new client to list of clients
+						cmdObj.addList(pServerobj->clientList,client_addr,fdaccept);
+						// return list of avilable clients on login
+						string response = cmdObj.returnList(pServerobj->clientList);
+						int len;
+						len = strlen(response.c_str());
+						send(fdaccept, response.c_str(), len, 0);						
 					}
 					/* Read from existing clients */
 					else{
@@ -187,17 +185,16 @@ void server :: server_init(int argc, char **argv)
 						memset(buffer, '\0', BUFFER_SIZE);
 						
 						if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
+							// Remove client from list of clients
+							cmdObj.removeList(pServerobj->clientList, sock_index);
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
-							// Remove client from list of clients
-							// pServerobj->clientList.assign(cmdObj.removeList(pServerobj->clientList, client_addr));
 
 							/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
 						}
 						else {
 							//Process incoming data from existing clients here ...
-							
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... \n");
 							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))

@@ -8,20 +8,7 @@ using namespace std;
 #define S_ADDRESS "8.8.8.8"
 #define S_PORT 53
 
-// class clientInfo
-// {
-//     public:
-//     string ip;
-//     string domain;
-//     int port;
-
-//     public:
-//     clientInfo(string ip, string domain, int port) {
-//         this->ip = ip;
-//         this->domain = domain;
-//         this->port = port;
-//     }
-// };
+bool sortByPort(const clientInfo & a, const clientInfo & b) { return a.port < b.port; }
 
 /**
 Function for generic commands
@@ -68,7 +55,6 @@ void commands::getAuthor(string command){
 */
 void commands::getIp(string command){
     char myIP[16];
-    unsigned int myPort;
     struct sockaddr_in serverAddress, myAddress;
     int sock;
 
@@ -111,7 +97,7 @@ void commands::getPort(string port,string command){
 /**
 * To add to List of available clients
 */
-void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr){
+void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr, int socket_index){
         char myIP[16], host[1024], service[20];    
         unsigned int myPort;
         
@@ -124,16 +110,27 @@ void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr){
         response.ip = string(myIP);
         response.domain = host;
         response.port = myPort;
+        response.socket_index = socket_index;
 
         clientList.push_back(response);
-        // return response;
+        clientList.sort(sortByPort);
 }
 
 /**
 * To remove client from list of available clients
 */
-clientInfo commands::removeList(list<clientInfo> clientList, sockaddr_in client_addr){
-    printf("REMOVE LIST functionality");
+void commands::removeList(list<clientInfo> &clientList, int socket_index){
+    list<clientInfo>::iterator i = clientList.begin(); 
+    while (i != clientList.end())
+    {
+        if (i->socket_index == socket_index){
+            clientList.erase(i++);
+        }
+        else{
+            ++i;
+        }
+    }
+    clientList.sort(sortByPort);
 }
 
 /**

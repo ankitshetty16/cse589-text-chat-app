@@ -24,6 +24,7 @@ struct clientInfo
     string ip;
     string domain;
     int port;
+    int socket_index;
 };
 
 class commands {
@@ -31,8 +32,8 @@ class commands {
     void getAuthor(string command);
     void getIp(string command);
     void getPort(string port, string command);
-    void addList(list<clientInfo> &clientList, sockaddr_in client_addr);
-    clientInfo removeList(list<clientInfo> clientList, sockaddr_in client_addr);
+    void addList(list<clientInfo> &clientList, sockaddr_in client_addr,int socket_index);
+    void removeList(list<clientInfo> &clientList, int socket_index);
     void getList(list<clientInfo> clientList, string command);
     string returnList(list<clientInfo> clientList);
 };
