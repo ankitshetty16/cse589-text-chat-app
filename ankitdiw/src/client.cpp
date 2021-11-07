@@ -364,7 +364,7 @@ void client :: handleStdinCmd()
 
 			printf("\nSENDing it to the remote server ... \n");
 			sendMsgBuf = encodeMsg(commandArgv[1],commandArgv[2]);
-			cout<<"Encoded msg : --> "<<endl;
+			cout<<"Encoded msg : --> "<<sendMsgBuf<<endl;
 			if(send(pClientobj->serverSocket, sendMsgBuf.c_str(), sendMsgBuf.length(), 0) > 0)
 			{
 				printf("Done!\n");
@@ -378,6 +378,19 @@ void client :: handleStdinCmd()
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			}
 			break;
+	
+		case REFRESH:
+			if(!pClientobj->isServerConnected)
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			send(pClientobj->serverSocket, "~R", 2, 0);	
+			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			break;
+
 		case LOGOUT:
 			if(!pClientobj->isServerConnected)
 			{
@@ -397,6 +410,7 @@ void client :: handleStdinCmd()
 			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
     		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			break;
+		
 		case EXIT:
 			if(pClientobj->isServerConnected)
 			{
