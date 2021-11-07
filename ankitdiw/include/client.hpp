@@ -37,6 +37,8 @@ class client
     int connectToServer(const char *server_ip,const char* server_port);
     void client_init(int argc, char **argv);
     void handleStdinCmd();
+    list<clientInfo> clientList;
+    void handleServerMsg(char *buffer);
 
 };
 

@@ -42,6 +42,73 @@ client* client::getInstance()
 
 //int connect_to_host(char *server_ip, char *server_port);
 
+
+void decodeListString(list<clientInfo> &clientList,char *buffer)
+{	
+	clientList.clear();
+	buffer[strlen(buffer)] = '\0';
+	buffer++;
+	char numClient[1];
+	strncpy(numClient,buffer,1);
+	int numClients = atoi(numClient);
+	cout<<"Number of clients = "<<numClients<<endl;
+	buffer++;
+	int loopCount = 0;
+	for(int i = 0; i < numClients; ++i)
+	{
+		char len[3];
+		strncpy(len,buffer,3);
+		buffer += 3;
+		int d_len = atoi(len);
+		cout<<"Domain len="<<d_len<<"\n";
+		char domain[d_len];
+		strncpy(domain,buffer,d_len);
+		cout<<"Domain:"<<domain<<"\n";
+		buffer += d_len;
+
+
+		strncpy(len,buffer,3);
+		buffer += 3;
+		int ip_len = atoi(len);
+		cout<<"ip len="<<ip_len<<"\n";
+		char ip[ip_len];
+		strncpy(ip,buffer,ip_len);
+		cout<<"ip:"<<ip<<"\n";
+		buffer += ip_len;
+
+
+		strncpy(len,buffer,3);
+		buffer += 3;
+		int port_len = atoi(len);
+		cout<<"portlen="<<port_len<<"\n";
+		//buffer += 3;
+		loopCount++;
+		int portValue;
+		if(loopCount == numClients)
+		{
+			char port[port_len+1];
+			strncpy(port,buffer,port_len+1);
+			cout<<"port="<<port<<"\n";
+			buffer += port_len;
+			portValue = atoi(port);
+		}
+		else
+		{
+			char port[port_len];
+			strncpy(port,buffer,port_len);
+			cout<<"port="<<port<<"\n";
+			buffer += port_len;
+			portValue = atoi(port);
+		}
+
+		clientInfo response;
+        response.ip = string(ip);
+        response.domain = string(domain);
+        response.port = portValue;
+
+        clientList.push_back(response);
+	}
+}
 /**
 * main function
 *
@@ -57,35 +124,6 @@ void client :: client_init(int argc, char **argv)
 		exit(-1);
 	}
 	client* pClientobj = client::getInstance();
-	//connect_to_host(argv[1], argv[2]);
-	/*
-	pClientobj->connectToServer("127.0.0.1","4566");
-	
-	while(TRUE){
-		printf("\n[PA1-Client@CSE489/589]$ ");
-		fflush(stdout);
-		
-		char *msg = (char*) malloc(sizeof(char)*MSG_SIZE);
-		memset(msg, '\0', MSG_SIZE);
-		if(fgets(msg, MSG_SIZE-1, stdin) == NULL) //Mind the newline character that will be written to msg
-			exit(-1);
-		
-		printf("I got: %s(size:%d chars)", msg, strlen(msg));
-		
-		printf("\nSENDing it to the remote server ... ");
-		if(send(server, msg, strlen(msg), 0) == strlen(msg))
-			printf("Done!\n");
-		fflush(stdout);
-		
-		/* Initialize buffer to receieve response 
-		char *buffer = (char*) malloc(sizeof(char)*BUFFER_SIZE);
-		memset(buffer, '\0', BUFFER_SIZE);
-		
-		if(recv(server, buffer, BUFFER_SIZE, 0) >= 0){
-			printf("Server responded: %s", buffer);
-			fflush(stdout);
-		}
-		*/
 	memset(&pClientobj->serverSocket,0,sizeof(int));
 	memset(&pClientobj->isServerConnected,0,sizeof(bool));
 	
@@ -148,6 +186,8 @@ void client :: client_init(int argc, char **argv)
                             
                             printf("SERVER sent me: %s\n", buffer);
                             printf("ECHOing it back to the remote host ... \n");
+							pClientobj->handleServerMsg(buffer);
+
                             //if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
                                 // string test = "Beej was here!";
                                 // int len, bytes_sent;
@@ -290,6 +330,16 @@ void client :: handleStdinCmd()
 			cout<<"Connected to server\n";
 			break;
 
+		case LIST:
+			if(!pClientobj->isServerConnected)
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			cmdObj.getList(pClientobj->clientList,commandArgv[0]);
+			break;
+
 		case SEND:
 			if(!pClientobj->isServerConnected)
 			{
@@ -344,5 +394,15 @@ void client :: handleStdinCmd()
 			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			exit(0);
 
+	}
+}
+
+void client :: handleServerMsg(char *buffer)
+{	
+	client* pClientobj = client::getInstance();
+	if(buffer[0] == 'L')
+	{
+		cout<<"It is a list msg\n";
+		decodeListString(pClientobj->clientList,buffer);
 	}
 }
