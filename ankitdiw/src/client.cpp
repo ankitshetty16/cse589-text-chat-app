@@ -47,7 +47,7 @@ void decodeListString(list<clientInfo> &clientList,char *buffer)
 {	
 	clientList.clear();
 	buffer[strlen(buffer)] = '\0';
-	buffer++;
+	buffer+=2;
 	char numClient[1];
 	strncpy(numClient,buffer,1);
 	int numClients = atoi(numClient);
@@ -275,7 +275,7 @@ int isValidPort(std::string port)
 
 void client :: handleStdinCmd()
 {	
-	cout<<"Inside HandleStdin\n";
+	//cout<<"Inside HandleStdin\n";
 	client* pClientobj = client::getInstance();
 	std::vector<std::string> commandArgv;
 	commands cmdObj;
@@ -285,6 +285,7 @@ void client :: handleStdinCmd()
 	int arg_count = 0;
 	std::istringstream iss(command);
 	std::string token;
+	std::string sendPortNum;
 	while(std::getline(iss, token, ' '))
 	{
 		commandArgv.push_back(token);
@@ -324,7 +325,10 @@ void client :: handleStdinCmd()
 			}
 			pClientobj->isServerConnected = TRUE;
 			FD_SET(pClientobj->serverSocket, &pClientobj->masterList);
-			pClientobj->headSocket = pClientobj->serverSocket + 1;			
+			pClientobj->headSocket = pClientobj->serverSocket + 1;
+			sendPortNum = "~P" + pClientobj->listeningPort;
+			//sendPortNum = "~P" + pClientobj->listeningPort;
+			send(pClientobj->serverSocket, sendPortNum.c_str(), sendPortNum.length(), 0);	
 			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
     		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			cout<<"Connected to server\n";
@@ -400,7 +404,7 @@ void client :: handleStdinCmd()
 void client :: handleServerMsg(char *buffer)
 {	
 	client* pClientobj = client::getInstance();
-	if(buffer[0] == 'L')
+	if(buffer[0] == '~' && buffer[1] == 'L')
 	{
 		cout<<"It is a list msg\n";
 		decodeListString(pClientobj->clientList,buffer);
