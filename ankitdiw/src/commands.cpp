@@ -8,6 +8,7 @@ using namespace std;
 #define S_ADDRESS "8.8.8.8"
 #define S_PORT 53
 
+// SORTING BY PORT
 bool sortByPort(const clientInfo & a, const clientInfo & b) { return a.port < b.port; }
 
 /**
@@ -97,13 +98,13 @@ void commands::getPort(string port,string command){
 /**
 * To add to List of available clients
 */
-void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr, int socket_index){
+void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr, int socket_index, char* port){
         char myIP[16], host[1024], service[20];    
         unsigned int myPort;
         
         // To get client related details and add to list
         inet_ntop(AF_INET, &client_addr.sin_addr, myIP, sizeof(myIP));
-        myPort = ntohs(client_addr.sin_port);
+        myPort = atoi(port);
         getnameinfo((struct sockaddr*)&client_addr, sizeof(client_addr), host, sizeof(host), service, sizeof(service), 0);
 
         clientInfo response;
@@ -153,7 +154,7 @@ string commands::returnList(list<clientInfo> clientList){
     string response;
     stringstream clSize;
     clSize << setw(1) << setfill('0') << clientList.size();    
-    string start = "L"+clSize.str();
+    string start = "~L"+clSize.str();
     response.append(start.c_str());
     for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
         string domain = i -> domain.c_str();

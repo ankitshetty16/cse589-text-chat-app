@@ -73,6 +73,11 @@ msgType getMsgType(std::string msg)
         m = EXIT;
         return m;
     }
+    else if(msg == "~P")
+    {
+        m = ADDCLIENT;
+        return m;
+    }
     else
     {
         m = NOTFOUND;

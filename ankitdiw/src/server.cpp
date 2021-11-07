@@ -169,14 +169,7 @@ void server :: server_init(int argc, char **argv)
 						            
 						/* Add to watched socket list */
 						FD_SET(fdaccept, &master_list);
-						if(fdaccept > head_socket) head_socket = fdaccept;
-						// Add new client to list of clients
-						cmdObj.addList(pServerobj->clientList,client_addr,fdaccept);
-						// return list of avilable clients on login
-						string response = cmdObj.returnList(pServerobj->clientList);
-						int len;
-						len = strlen(response.c_str());
-						send(fdaccept, response.c_str(), len, 0);						
+						if(fdaccept > head_socket) head_socket = fdaccept;						
 					}
 					/* Read from existing clients */
 					else{
@@ -197,6 +190,25 @@ void server :: server_init(int argc, char **argv)
 							//Process incoming data from existing clients here ...
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... \n");
+							cout << buffer[0]+buffer[1] << endl;
+
+							msgType msg;
+							char pCmd[2] = {buffer[0],buffer[1]};
+							msg = getMsgType(pCmd);
+							switch(msg){
+								case ADDCLIENT:
+									// Add new client to list of clients
+									char port[4];
+									strncpy(port,buffer+2,4);
+									cmdObj.addList(pServerobj->clientList,client_addr,fdaccept, port);
+									// return list of avilable clients on login
+									string response = cmdObj.returnList(pServerobj->clientList);
+									int len;
+									len = strlen(response.c_str());
+									send(fdaccept, response.c_str(), len, 0);
+									break;
+							}
+
 							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
 								printf("Done!\n");
 							fflush(stdout);

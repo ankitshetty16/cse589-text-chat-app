@@ -24,8 +24,8 @@ enum msgType
     UNBLOCK,
     LOGOUT,
     EXIT,
+    ADDCLIENT,
     NOTFOUND
-
 };
 
 msgType getMsgType(std::string msg);
