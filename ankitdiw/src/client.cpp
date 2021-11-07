@@ -19,6 +19,7 @@
 * @section DESCRIPTION
 *
 * This file contains the client.
+*  ./grader_controller -c ./grader.cfg -s ../venkate9_pa1.tar -t _list
 */
 
 #include <../include/client.hpp>
@@ -46,68 +47,43 @@ client* client::getInstance()
 void decodeListString(list<clientInfo> &clientList,char *buffer)
 {	
 	clientList.clear();
-	buffer[strlen(buffer)] = '\0';
-	buffer+=2;
-	char numClient[1];
-	strncpy(numClient,buffer,1);
-	int numClients = atoi(numClient);
-	cout<<"Number of clients = "<<numClients<<endl;
-	buffer++;
-	int loopCount = 0;
+	std::string buf = buffer;
+	int numClients = std::atoi(buf.substr(2,1).c_str());
+	cout<<"Number of clients: "<<numClients<<endl;
+	int pos = 3;
 	for(int i = 0; i < numClients; ++i)
 	{
-		char len[3];
-		strncpy(len,buffer,3);
-		buffer += 3;
-		int d_len = atoi(len);
+		int d_len = std::atoi(buf.substr(pos,3).c_str());
 		cout<<"Domain len="<<d_len<<"\n";
-		char domain[d_len];
-		strncpy(domain,buffer,d_len);
+		pos += 3;
+		std::string domain = buf.substr(pos,d_len);
+		pos += d_len;
 		cout<<"Domain:"<<domain<<"\n";
-		buffer += d_len;
 
-
-		strncpy(len,buffer,3);
-		buffer += 3;
-		int ip_len = atoi(len);
+		int ip_len = std::atoi(buf.substr(pos,3).c_str());
 		cout<<"ip len="<<ip_len<<"\n";
-		char ip[ip_len];
-		strncpy(ip,buffer,ip_len);
-		cout<<"ip:"<<ip<<"\n";
-		buffer += ip_len;
+		pos += 3;
+		std::string ip = buf.substr(pos,ip_len);
+		pos += ip_len;
+		cout<<"IP:"<<ip<<"\n";
 
-
-		strncpy(len,buffer,3);
-		buffer += 3;
-		int port_len = atoi(len);
-		cout<<"portlen="<<port_len<<"\n";
-		//buffer += 3;
-		loopCount++;
-		int portValue;
-		if(loopCount == numClients)
-		{
-			char port[port_len+1];
-			strncpy(port,buffer,port_len+1);
-			cout<<"port="<<port<<"\n";
-			buffer += port_len;
-			portValue = atoi(port);
-		}
-		else
-		{
-			char port[port_len];
-			strncpy(port,buffer,port_len);
-			cout<<"port="<<port<<"\n";
-			buffer += port_len;
-			portValue = atoi(port);
-		}
+		int port_len = std::atoi(buf.substr(pos,3).c_str());
+		cout<<"port len="<<port_len<<"\n";
+		pos += 3;
+		int port = std::atoi(buf.substr(pos,port_len).c_str());
+		pos += port_len;
+		cout<<"PORT:"<<port<<"\n";
 
 		clientInfo response;
-        response.ip = string(ip);
-        response.domain = string(domain);
-        response.port = portValue;
+    	response.ip = string(ip);
+    	response.domain = string(domain);
+    	response.port = port;
 
-        clientList.push_back(response);
+    	clientList.push_back(response);
+
+
 	}
+	
 }
 /**
 * main function
@@ -153,11 +129,9 @@ void client :: client_init(int argc, char **argv)
 		/* Check if we have sockets/STDIN to process */
 		if(selret > 0)
 		{	
-			cout<<"Inside If selret\n";
 			/* Loop through socket descriptors to check which ones are ready */
 			for(sock_index=0; sock_index<=pClientobj->headSocket; sock_index+=1)
 			{	
-				cout<<"Inside for\n";
 				if(FD_ISSET(sock_index, &pClientobj->watchList))
 				{
 					/* Check if new command on STDIN */
@@ -216,7 +190,6 @@ int client :: connectToServer(const char *server_ip, const char* server_port)
 	int fdsocket;
 	struct addrinfo hints, *res;
 
-	cout<<"inside connect to server"<<endl;
 	/* Set up hints structure */	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
@@ -273,6 +246,24 @@ int isValidPort(std::string port)
 	return TRUE;
 }
 
+int client :: isValidClient(std::string clientIP)
+{
+	client* pClientobj = client::getInstance();
+	for(list<clientInfo>::iterator i = pClientobj->clientList.begin(); i != pClientobj->clientList.end(); i++) 
+	{
+		if(clientIP == i->ip)
+			return TRUE;
+    }
+	return FALSE;
+}
+
+std::string encodeMsg(std::string ip,std::string message)
+{
+	std::string msg;
+	msg = "~M"+digitFormatter(ip.length())+ip+digitFormatter(message.length())+message;
+	return msg;
+}
+
 void client :: handleStdinCmd()
 {	
 	//cout<<"Inside HandleStdin\n";
@@ -286,6 +277,7 @@ void client :: handleStdinCmd()
 	std::istringstream iss(command);
 	std::string token;
 	std::string sendPortNum;
+	std::string sendMsgBuf;
 	while(std::getline(iss, token, ' '))
 	{
 		commandArgv.push_back(token);
@@ -318,6 +310,12 @@ void client :: handleStdinCmd()
 				break;
 			}
 			if(!pClientobj->connectToServer(commandArgv[1].c_str(),commandArgv[2].c_str()))
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			if(pClientobj->isServerConnected)
 			{
 				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
@@ -357,8 +355,17 @@ void client :: handleStdinCmd()
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 				break;
 			}
+			if(!(pClientobj->isValidClient(commandArgv[1])))
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+
 			printf("\nSENDing it to the remote server ... \n");
-			if(send(pClientobj->serverSocket, commandArgv[2].c_str(), commandArgv[2].length(), 0) > 0)
+			sendMsgBuf = encodeMsg(commandArgv[1],commandArgv[2]);
+			cout<<"Encoded msg : --> "<<endl;
+			if(send(pClientobj->serverSocket, sendMsgBuf.c_str(), sendMsgBuf.length(), 0) > 0)
 			{
 				printf("Done!\n");
 				cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
@@ -383,8 +390,10 @@ void client :: handleStdinCmd()
 			// Remove client from list of clients
 
 			/* Remove from watched list */
+			pClientobj->clientList.clear();
 			FD_CLR(pClientobj->serverSocket, &pClientobj->masterList);
 			pClientobj->headSocket = 0;
+			pClientobj->isServerConnected = FALSE;
 			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
     		cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			break;
@@ -397,8 +406,25 @@ void client :: handleStdinCmd()
 			cse4589_print_and_log("[%s:SUCCESS]\n",commandArgv[0].c_str());
 			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			exit(0);
+			break;
 
 	}
+}
+
+
+void handleRcvdMsgFromCLient(char *buffer)
+{	
+	std::string buf = buffer;
+	int ip_len = std::atoi(buf.substr(2,3).c_str());
+	int pos = 5;
+	std::string ip = buf.substr(pos,ip_len);
+	pos += ip_len;
+	int msg_len = std::atoi(buf.substr(pos,3).c_str());
+	pos += 3;
+	std::string msg = buf.substr(pos,msg_len);
+	cse4589_print_and_log("[%s:SUCCESS]\n","RECEIVED");
+	cse4589_print_and_log("msg from:%s\n[msg]:%s\n", ip.c_str(), msg.c_str());
+	cse4589_print_and_log("[%s:END]\n", "RECEIVED");
 }
 
 void client :: handleServerMsg(char *buffer)
@@ -408,5 +434,10 @@ void client :: handleServerMsg(char *buffer)
 	{
 		cout<<"It is a list msg\n";
 		decodeListString(pClientobj->clientList,buffer);
+	}
+	else if(buffer[0] == '~' && buffer[1] == 'M')
+	{
+		cout<<"It is regular msg from client\n";
+		handleRcvdMsgFromCLient(buffer);
 	}
 }

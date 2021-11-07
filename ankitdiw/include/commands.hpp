@@ -26,7 +26,7 @@ struct clientInfo
     int port;
     int socket_index;
 };
-
+string digitFormatter(int digit);
 class commands {
     public:
     void getAuthor(string command);

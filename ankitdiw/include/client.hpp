@@ -39,6 +39,7 @@ class client
     void handleStdinCmd();
     list<clientInfo> clientList;
     void handleServerMsg(char *buffer);
+    int isValidClient(std::string clientIP);
 
 };
 
