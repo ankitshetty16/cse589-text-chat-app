@@ -101,7 +101,7 @@ void client :: client_init(int argc, char **argv)
 	}
 	client* pClientobj = client::getInstance();
 	memset(&pClientobj->serverSocket,0,sizeof(int));
-	memset(&pClientobj->isServerConnected,0,sizeof(bool));
+	memset(&pClientobj->isServerConnected,0,sizeof(int));
 	
 	std::vector<std::string> comArg;
 	comArg.assign(argv + 1, argv + argc);
@@ -125,7 +125,6 @@ void client :: client_init(int argc, char **argv)
 		selret = select(pClientobj->headSocket + 1, &pClientobj->watchList, NULL, NULL, NULL);
 		if(selret < 0)
 			perror("select failed.");
-		cout<<"Selret = "<<selret<<"\n";
 		/* Check if we have sockets/STDIN to process */
 		if(selret > 0)
 		{	
@@ -278,6 +277,8 @@ void client :: handleStdinCmd()
 	std::string token;
 	std::string sendPortNum;
 	std::string sendMsgBuf;
+	std::string broadCast;
+	std::string loopMsg;
 	while(std::getline(iss, token, ' '))
 	{
 		commandArgv.push_back(token);
@@ -363,7 +364,13 @@ void client :: handleStdinCmd()
 			}
 
 			printf("\nSENDing it to the remote server ... \n");
-			sendMsgBuf = encodeMsg(commandArgv[1],commandArgv[2]);
+			for(int i = 2; i < commandArgv.size(); ++i)
+			{
+				loopMsg = loopMsg + commandArgv[i]+ " ";
+			}
+			loopMsg[loopMsg.length()-1] == '\0';
+			cout<<"LoopMsg:"<<loopMsg<<endl;
+			sendMsgBuf = encodeMsg(commandArgv[1],loopMsg);
 			cout<<"Encoded msg : --> "<<sendMsgBuf<<endl;
 			if(send(pClientobj->serverSocket, sendMsgBuf.c_str(), sendMsgBuf.length(), 0) > 0)
 			{
@@ -377,6 +384,21 @@ void client :: handleStdinCmd()
 				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			}
+			break;
+
+		case BROADCAST:
+			if(!pClientobj->isServerConnected)
+			{
+				cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+    			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+				break;
+			}
+			sendMsgBuf = "~B";
+			sendMsgBuf.append(commandArgv[1].c_str());
+			cout<<"Sending broadcast message"<<sendMsgBuf<<endl;
+			send(pClientobj->serverSocket,sendMsgBuf.c_str(),sendMsgBuf.length(),0);
+			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
+			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			break;
 	
 		case REFRESH:
@@ -421,6 +443,11 @@ void client :: handleStdinCmd()
 			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			exit(0);
 			break;
+		case NOTFOUND:
+			cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+			break;
+
 
 	}
 }

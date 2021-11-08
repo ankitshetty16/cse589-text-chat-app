@@ -25,7 +25,7 @@ class client
 {
     static client* mpInstance;
     int serverSocket;
-    bool isServerConnected;
+    int isServerConnected;
     std::string listeningPort;
     fd_set masterList,watchList;
     int headSocket;
