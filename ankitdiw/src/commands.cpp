@@ -38,6 +38,41 @@ string digitFormatter(int digit) {
     string result = ss.str();
     return result;
 }
+
+/**
+* Decode IP and client MSG
+*/
+void decodeMsg(char* encodedMsg, string &ip, string &message, string type){
+    cout << "INTO DECODEMSG MESSAGE >>>>>>>>>" << endl;
+	std::string buf = encodedMsg;
+    if(type == "private"){
+        cout << "INTO PRIVATE DECODE >>>>>>>>>" << endl;
+        int ip_len = std::atoi(buf.substr(2,3).c_str());
+        int pos = 5;
+        ip = buf.substr(pos,ip_len);
+        pos += ip_len;
+        int msg_len = std::atoi(buf.substr(pos,3).c_str());
+        pos += 3;
+        message = buf.substr(pos,msg_len);
+    }else if(type == "broadcast"){
+        cout << "INTO BROADCAST DECODE >>>>>>>>>" << endl;
+        int pos = std::atoi(buf.substr(2,3).c_str());
+        int msg_len = std::atoi(buf.substr(pos,3).c_str());
+        pos += 3;
+        message = buf.substr(pos,msg_len);     
+    }
+}
+
+/**
+* Encode message and sender IP
+*/
+string msgEncoder(std::string ip,std::string message)
+{
+	std::string msg;
+	msg = digitFormatter(ip.length())+ip+digitFormatter(message.length())+message;
+	return msg;
+}
+
 /**
 * To get Author details (common func for server & client)
 */
@@ -165,4 +200,59 @@ string commands::returnList(list<clientInfo> clientList){
         response.append(subString);
     }
     return response;
+}
+
+/**
+* Decode message and return 
+*/
+void commands::transmitMsg(list<clientInfo> clientList,int sock_index, char* message, string type){
+    cout << "INTO PREPARE MESSAGE >>>>>>>>>" << endl;
+    list<clientInfo>::iterator i = clientList.begin();
+    string msg;
+    string receiverIP;
+    string response = "~M";
+    string senderIP;
+    int receiverSocket;
+    
+    decodeMsg(message,receiverIP,msg,type);
+    cout << "INTO WHILE MESSAGE >>>>>>>>>" << endl;
+    while (i != clientList.end())
+    {
+        if(type == "private" && i->ip == receiverIP){
+            cout << "INTO PRIVTE WHILE MESSAGE >>>>>>>>>" << endl;
+            receiverSocket = i->socket_index;
+            cout <<receiverSocket << endl;
+        }
+        if (i->socket_index == sock_index){
+            cout << "SENDER IP>>>>>>" << endl;
+            cout << i->ip << endl;
+            senderIP = i->ip;
+            i++;
+        }
+        else{
+            ++i;
+        }
+    }
+    response.append(msgEncoder(senderIP,msg));
+    int len;
+    len = strlen(response.c_str());
+    
+    if(type == "private"){
+        send(receiverSocket, response.c_str(), len, 0);
+    }else if (type == "broadcast"){
+        receiverIP = "255.255.255.255";
+        list<clientInfo>::iterator i = clientList.begin();
+        while (i != clientList.end()){
+        	if(i->socket_index != sock_index){
+        		send(i->socket_index, response.c_str(), len, 0);											
+        		i++;
+        	}else{
+        		++i;
+        	}
+        }
+    }
+
+    cse4589_print_and_log("[%s:SUCCESS]\n", "RELAYED");
+    cse4589_print_and_log("msg from:%s, to:%s\n[msg]:%s\n", senderIP.c_str(), receiverIP.c_str(), msg.c_str());
+    cse4589_print_and_log("[%s:END]\n", "RELAYED");
 }

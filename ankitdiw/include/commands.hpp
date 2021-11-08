@@ -36,6 +36,7 @@ class commands {
     void removeList(list<clientInfo> &clientList, int socket_index);
     void getList(list<clientInfo> clientList, string command);
     string returnList(list<clientInfo> clientList);
+    void transmitMsg(list<clientInfo> clientList,int sock_index, char* message, string type);
 };
 
 #endif

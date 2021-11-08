@@ -24,7 +24,7 @@ enum msgType
     UNBLOCK,
     LOGOUT,
     EXIT,
-    ADDCLIENT,
+    ADDCLIENT,  
     NOTFOUND
 };
 

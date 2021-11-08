@@ -150,7 +150,13 @@ void server :: server_init(int argc, char **argv)
 								break;
 							case LIST:
 								cmdObj.getList(pServerobj->clientList, cmdArgv[0]);
-								break;			
+								break;
+							case STATISTICS:
+								cout << "YET TO BE IMPLEMENTED" << endl;
+								break;
+							case BLOCKED:
+								cout << "YET TO BE IMPLEMENTED" << endl;
+								break;																
 							case NOTFOUND:
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
 								cse4589_print_and_log("[%s:END]\n", cmdArgv[0].c_str());
@@ -190,27 +196,52 @@ void server :: server_init(int argc, char **argv)
 							//Process incoming data from existing clients here ...
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... \n");
-							cout << buffer[0]+buffer[1] << endl;
+							// cout << buffer[0]+buffer[1] << endl;
 
 							msgType msg;
 							char pCmd[2] = {buffer[0],buffer[1]};
 							msg = getMsgType(pCmd);
-							switch(msg){
+							string response;
+							switch(msg) {
 								case ADDCLIENT:
-									// Add new client to list of clients
-									char port[4];
-									strncpy(port,buffer+2,4);
-									cmdObj.addList(pServerobj->clientList,client_addr,fdaccept, port);
-									// return list of avilable clients on login
-									string response = cmdObj.returnList(pServerobj->clientList);
-									int len;
-									len = strlen(response.c_str());
-									send(fdaccept, response.c_str(), len, 0);
-									break;
+									{
+										// Add new client to list of clients
+										char port[4];
+										strncpy(port,buffer+2,4);
+										cmdObj.addList(pServerobj->clientList,client_addr,fdaccept, port);
+										// return list of avilable clients on login
+										response = cmdObj.returnList(pServerobj->clientList);
+										int len;
+										len = strlen(response.c_str());
+										send(fdaccept, response.c_str(), len, 0);
+										break;
+									}
+								case REFRESH:
+									{
+										cout << "INSIDE REFRESH CASE>>>>" << endl;
+										// return list of avilable clients on login
+										response = cmdObj.returnList(pServerobj->clientList);
+										cout << "RETURNED STRING >>> " << response << endl;
+										int len;
+										len = strlen(response.c_str());
+										send(sock_index, response.c_str(), len, 0);										
+										break;
+									}
+								case SEND:
+									{
+										cmdObj.transmitMsg(pServerobj->clientList,sock_index,buffer,"private");										
+										break;
+									}
+								case BROADCAST:
+									{
+										cout << "BROADCAST>>>>>>" <<endl;
+										cmdObj.transmitMsg(pServerobj->clientList,sock_index,buffer,"broadcast");
+										break;											
+									}
 							}
 
-							if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
-								printf("Done!\n");
+							// if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
+							printf("Done!\n");
 							fflush(stdout);
 						}
 						

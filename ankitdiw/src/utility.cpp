@@ -78,6 +78,21 @@ msgType getMsgType(std::string msg)
         m = ADDCLIENT;
         return m;
     }
+    else if(msg == "~R")
+    {
+        m = REFRESH;
+        return m;
+    }
+    else if(msg == "~M")
+    {
+        m = SEND;
+        return m;
+    }
+    else if(msg == "~B")
+    {
+        m = BROADCAST;
+        return m;
+    }       
     else
     {
         m = NOTFOUND;
