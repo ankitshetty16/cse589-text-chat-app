@@ -393,8 +393,14 @@ void client :: handleStdinCmd()
     			cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 				break;
 			}
+			for(int i = 1; i < commandArgv.size(); ++i)
+			{
+				loopMsg = loopMsg + commandArgv[i]+ " ";
+			}
+			loopMsg[loopMsg.length()-1] == '\0';
+			cout<<"LoopMsg:"<<loopMsg<<endl;
 			sendMsgBuf = "~B";
-			sendMsgBuf.append(commandArgv[1].c_str());
+			sendMsgBuf.append(loopMsg);
 			cout<<"Sending broadcast message"<<sendMsgBuf<<endl;
 			send(pClientobj->serverSocket,sendMsgBuf.c_str(),sendMsgBuf.length(),0);
 			cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
