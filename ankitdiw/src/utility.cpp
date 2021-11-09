@@ -102,7 +102,12 @@ msgType getMsgType(std::string msg)
     {
         m = UNBLOCK;
         return m;
-    }         
+    }
+    else if(msg == "~E")
+    {
+        m = EXIT;
+        return m;
+    }        
     else
     {
         m = NOTFOUND;

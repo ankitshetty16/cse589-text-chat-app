@@ -163,7 +163,6 @@ void server :: server_init(int argc, char **argv)
 								cmdObj.getList(pServerobj->clientList, cmdArgv[0]);
 								break;
 							case STATISTICS:
-								cout << "YET TO BE IMPLEMENTED" << endl;
 								cmdObj.getStatistics(pServerobj->clientList, cmdArgv[0]);
 								break;
 							case BLOCKED:
@@ -196,8 +195,8 @@ void server :: server_init(int argc, char **argv)
 						memset(buffer, '\0', BUFFER_SIZE);
 						
 						if(recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0){
-							// Remove client from list of clients
-							cmdObj.removeList(pServerobj->clientList, sock_index);
+							// Remove client from list of clients if logged out
+							cmdObj.removeList(pServerobj->clientList, sock_index, 0);
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
 
@@ -265,9 +264,11 @@ void server :: server_init(int argc, char **argv)
 										cmdObj.toggleBlock(pServerobj->clientList,sock_index,buffer,"unblock");
 										break;											
 									}
-								default:
+								case EXIT:
 									{
-										cout << "DEFAULTING HERE" << endl;
+										cout << "EXIT HERE" << endl;
+										// Remove client from list of clients if logged out
+										cmdObj.removeList(pServerobj->clientList, sock_index, 1);
 									}																		
 							}
 

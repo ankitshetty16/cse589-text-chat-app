@@ -133,35 +133,51 @@ void commands::getPort(string port,string command){
 void commands::addList(list<clientInfo> &clientList,sockaddr_in client_addr, int socket_index, char* port){
         char myIP[16], host[1024], service[20];    
         unsigned int myPort;
+        int newClient = 1;
         // To get client related details and add to list
         inet_ntop(AF_INET, &client_addr.sin_addr, myIP, sizeof(myIP));
         myPort = atoi(port);
         getnameinfo((struct sockaddr*)&client_addr, sizeof(client_addr), host, sizeof(host), service, sizeof(service), 0);
         //TODO:: need to implement checks for users that have not exited and then logged in
-        clientInfo response;
-        response.ip = string(myIP);
-        response.domain = host;
-        response.port = myPort;
-        response.socket_index = socket_index;
-        response.active = 1;
-        response.msg_sent = 0;
-        response.msg_recv = 0;
-        clientList.push_back(response);
+        list<clientInfo>::iterator i = clientList.begin(); 
+        while (i != clientList.end()){
+            if(string(myIP) == i->ip){
+                newClient = 0;
+                i->active = 1;
+                i++;
+            }else{
+                ++i;
+            }
+        }
+        if(newClient == 1){
+            clientInfo response;
+            response.ip = string(myIP);
+            response.domain = host;
+            response.port = myPort;
+            response.socket_index = socket_index;
+            response.active = 1;
+            response.msg_sent = 0;
+            response.msg_recv = 0;
+            clientList.push_back(response);
+        }
         clientList.sort(sortByPort);
 }
 
 /**
 * To remove client from list of available clients
 */
-void commands::removeList(list<clientInfo> &clientList, int socket_index){
+void commands::removeList(list<clientInfo> &clientList, int socket_index, int exit){
     list<clientInfo>::iterator i = clientList.begin(); 
     while (i != clientList.end())
     {
         if (i->socket_index == socket_index){
             i->active = 0;
-            // remove from list if client EXITS
-            // clientList.erase(i++);
-            i++;
+            if(exit == 1){
+                // remove from list if client EXITS
+                clientList.erase(i++);
+            }else{
+                i++;
+            }
         }
         else{
             ++i;
@@ -211,7 +227,7 @@ string commands::returnList(list<clientInfo> clientList){
 /**
 * Decode message and return 
 */
-void commands::transmitMsg(list<clientInfo> clientList,int sock_index, char* message, string type){
+void commands::transmitMsg(list<clientInfo> &clientList,int sock_index, char* message, string type){
     list<clientInfo>::iterator i = clientList.begin();
     string msg;
     string receiverIP;
@@ -227,9 +243,10 @@ void commands::transmitMsg(list<clientInfo> clientList,int sock_index, char* mes
         if(type == "private" && i->ip == receiverIP){
             receiverSocket = i->socket_index;
             receiverBlockList = i->blocked;
-            // i->msg_recv = i->msg_recv+1;
+            i->msg_recv = i->msg_recv+1;
         }
         if (i->socket_index == sock_index){
+            i->msg_sent = i->msg_sent+1; 
             senderIP = i->ip;
             i++;
         }
@@ -254,7 +271,7 @@ void commands::transmitMsg(list<clientInfo> clientList,int sock_index, char* mes
         while (i != clientList.end()){
         	if(i->socket_index != sock_index){
                 receiverBlockList = i->blocked;
-                // i->msg_recv = i->msg_recv+1;
+                i->msg_recv = i->msg_recv+1;
                 if (std::find(receiverBlockList.begin(), receiverBlockList.end(), senderIP) != receiverBlockList.end())
                 {
                     return;
@@ -303,8 +320,6 @@ void commands::toggleBlock(list<clientInfo> &clientList,int sock_index, char* me
 * To display blocked list on server side
 */
 void commands::getBlockedList(list<clientInfo> clientList, string command, string ip) {
-    cout << "getBLOCKEDLIST callled" << endl;
-    cout << "BLOCKED LIST FOR IP>>>>>> " << ip << endl;
     list<clientInfo>::iterator i = clientList.begin();
     vector<string> blockedList;
     // TO get list of blocked IPs
@@ -333,18 +348,20 @@ void commands::getBlockedList(list<clientInfo> clientList, string command, strin
 * TO GET STATISTICS OF USERS
 */
 void commands::getStatistics(list<clientInfo> clientList,string command){
-    // For printing the list of servers available
-    // int index = 1;
-    // cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
-    // for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
-    //     string status;
-    //     // if(i -> active == true){
-    //     //     status = "logged-in";
-    //     // }else{
-    //     //     status = "logged-out";
-    //     // }
-
-    //     cse4589_print_and_log("%-5d%-35s%-8d%-8d%-8s\n", index++, i -> domain.c_str(), i->msg_sent, i->msg_recv, status);
-    // }
-    // cse4589_print_and_log("[%s:END]\n", command.c_str());
+    cout << "INTO GET STATISTICS" << endl;
+    // // For printing the statistics of servers available
+    int index = 1;
+    cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
+    for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+        std::string status;
+        if(i -> active == 1){
+            status = "logged-in";
+        }else{
+            status = "logged-out";
+        }
+// status.c_str()
+        cse4589_print_and_log("%-5d%-35s%-8d%-8d%-8s\n", index++, i -> domain.c_str(), i->msg_sent, i->msg_recv, status.c_str());
+    }
+    cse4589_print_and_log("[%s:END]\n", command.c_str());
 }
+
