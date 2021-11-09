@@ -184,37 +184,47 @@ void client :: client_init(int argc, char **argv)
 
 int client :: connectToServer(const char *server_ip, const char* server_port)
 {
-    int fdsocket;
-    struct addrinfo hints, *res;
+	int fdsocket;
+	int yes = 1;
+	struct addrinfo hints, *res;
 
-    /* Set up hints structure */    
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
+	/* Set up hints structure */	
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	hints.ai_socktype = SOCK_STREAM;
 
-    /* Fill up address structures */    
-    if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
-    {
-        perror("getaddrinfo failed");
-        return FALSE;
-    }
-    /* Socket */
-    fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    if(fdsocket < 0)
-    {
-        perror("Failed to create socket");
-        return FALSE;
-    }
-    /* Connect */
-    if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
-    {
-        perror("Connect failed");
-        return FALSE;
-    }
-    freeaddrinfo(res);
+	/* Fill up address structures */	
+	if (getaddrinfo(server_ip, server_port, &hints, &res) != 0)
+	{
+		perror("getaddrinfo failed");
+		return FALSE;
+	}
+	/* Socket */
+	fdsocket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	if(fdsocket < 0)
+	{
+		perror("Failed to create socket");
+		return FALSE;
+	}
 
-    client::getInstance()->serverSocket = fdsocket;
-    return TRUE;
+	if (setsockopt(fdsocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1); 
+	}
+	if (setsockopt(fdsocket, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1); 
+	}	
+	/* Connect */
+	if(connect(fdsocket, res->ai_addr, res->ai_addrlen) < 0)
+	{
+		perror("Connect failed");
+		return FALSE;
+	}
+	freeaddrinfo(res);
+
+	client::getInstance()->serverSocket = fdsocket;
+	return TRUE;
 
 }
 

@@ -54,7 +54,7 @@ void server :: server_init(int argc, char **argv)
 	}
 	
 	server* pServerobj = server::getInstance();
-	int server_socket, head_socket, selret, sock_index, fdaccept=0;
+	int server_socket, head_socket, selret, sock_index, fdaccept=0, yes = 1;
     socklen_t caddr_len;
 	struct sockaddr_in client_addr;
 	struct addrinfo hints, *res;
@@ -75,10 +75,21 @@ void server :: server_init(int argc, char **argv)
 	if(server_socket < 0)
 		perror("Cannot create socket");
 	
+
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1); 
+	}
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1); 
+	}
 	/* Bind */
 	if(bind(server_socket, res->ai_addr, res->ai_addrlen) < 0 )
 		perror("Bind failed");
 
+	// setsockopt(to_client_fd, SOL_SOCKET, SO_REUSEPORT, & yes, sizeof(int));
+    // setsockopt(to_client_fd, SOL_SOCKET, SO_REUSEADDR, & yes, sizeof(int));
 	freeaddrinfo(res);
 	
 	/* Listen */
@@ -153,9 +164,10 @@ void server :: server_init(int argc, char **argv)
 								break;
 							case STATISTICS:
 								cout << "YET TO BE IMPLEMENTED" << endl;
+								cmdObj.getStatistics(pServerobj->clientList, cmdArgv[0]);
 								break;
 							case BLOCKED:
-								cout << "YET TO BE IMPLEMENTED" << endl;
+								cmdObj.getBlockedList(pServerobj->clientList, cmdArgv[0], cmdArgv[1]);
 								break;																
 							case NOTFOUND:
 								cse4589_print_and_log("[%s:ERROR]\n", cmdArgv[0].c_str());
@@ -206,8 +218,8 @@ void server :: server_init(int argc, char **argv)
 								case ADDCLIENT:
 									{
 										// Add new client to list of clients
-										char port[4];
-										strncpy(port,buffer+2,4);
+										char port[5];
+										strncpy(port,buffer+2,5);
 										cmdObj.addList(pServerobj->clientList,client_addr,fdaccept, port);
 										// return list of avilable clients on login
 										response = cmdObj.returnList(pServerobj->clientList);
@@ -238,6 +250,18 @@ void server :: server_init(int argc, char **argv)
 										cmdObj.transmitMsg(pServerobj->clientList,sock_index,buffer,"broadcast");
 										break;											
 									}
+								case BLOCK:
+									{
+										cout << "BLOCK>>>>>>" <<endl;
+										cmdObj.toggleBlock(pServerobj->clientList,sock_index,buffer,"block");
+										break;											
+									}
+								case UNBLOCK:
+									{
+										cout << "UNBLOCK>>>>>>" <<endl;
+										cmdObj.toggleBlock(pServerobj->clientList,sock_index,buffer,"unblock");
+										break;											
+									}																		
 							}
 
 							// if(send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
@@ -253,4 +277,43 @@ void server :: server_init(int argc, char **argv)
 	printf("\n[PA1-SERVER@CSE489/589]$ ");
 	fflush(stdout);
 	}
+}
+
+
+void server :: addToMsgBuffer(string ip,string msg)
+{
+	server* pServerobj = server::getInstance();
+	std::map<std::string,std::vector<std::string> >::iterator it = pServerobj->msgBufferList.find(ip);
+	if(it != pServerobj->msgBufferList.end())
+	{
+		//Add the ip to the map
+		std::vector<std::string> temp;
+		temp.push_back(msg);
+		pServerobj->msgBufferList.insert(std::make_pair(ip,temp));
+	}
+	else
+	{
+		std::vector<std::string> temp = it->second;
+		temp.push_back(msg);
+		it->second = temp;
+	}
+}
+
+std::vector<std::string> server :: retrieveBufferedMsgForClient(string ip)
+{
+	std::vector<std::string> temp;
+	server* pServerobj = server::getInstance();
+	std::map<std::string,std::vector<std::string> >::iterator it = pServerobj->msgBufferList.find(ip);
+	if(it == pServerobj->msgBufferList.end())
+	{	
+		cout<<"There are no buffered msgs available for this client"<<endl;
+	}
+	else
+	{
+		temp = it->second;
+		std::vector<std::string> temp2 = it->second;
+		temp2.clear();
+		it->second = temp2;
+	}
+	return temp;
 }

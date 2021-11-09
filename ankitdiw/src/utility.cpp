@@ -92,7 +92,17 @@ msgType getMsgType(std::string msg)
     {
         m = BROADCAST;
         return m;
-    }       
+    }
+    else if(msg == "~K")
+    {
+        m = BLOCK;
+        return m;
+    }
+    else if(msg == "~U")
+    {
+        m = UNBLOCK;
+        return m;
+    }         
     else
     {
         m = NOTFOUND;

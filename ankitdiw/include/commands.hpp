@@ -25,6 +25,10 @@ struct clientInfo
     string domain;
     int port;
     int socket_index;
+    int active;
+    int msg_sent;
+    int msg_recv;
+    vector<string> blocked;
 };
 string digitFormatter(int digit);
 class commands {
@@ -37,6 +41,9 @@ class commands {
     void getList(list<clientInfo> clientList, string command);
     string returnList(list<clientInfo> clientList);
     void transmitMsg(list<clientInfo> clientList,int sock_index, char* message, string type);
+    void toggleBlock(list<clientInfo> &clientList,int sock_index, char* message, string type);
+    void getBlockedList(list<clientInfo> clientList, string command, string ip);
+    void getStatistics(list<clientInfo> clientList,string command);
 };
 
 #endif

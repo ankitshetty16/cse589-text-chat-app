@@ -24,9 +24,12 @@ class server {
     
     public:
     list<clientInfo> clientList;
+    std::map<std::string,std::vector<std::string> > msgBufferList;
     // This is how server can access the single instance
     static server* getInstance();
     void server_init(int argc, char **argv);
+    void addToMsgBuffer(string ip,string msg);
+    std::vector<std::string> retrieveBufferedMsgForClient(string ip);
 };
 
 #endif
