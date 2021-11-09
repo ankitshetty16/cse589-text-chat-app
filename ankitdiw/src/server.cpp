@@ -211,17 +211,20 @@ void server :: server_init(int argc, char **argv)
 							// cout << buffer[0]+buffer[1] << endl;
 
 							msgType msg;
-							char pCmd[2] = {buffer[0],buffer[1]};
+							string str_buf = buffer;
+							string pCmd = str_buf.substr(0,2);
 							msg = getMsgType(pCmd);
 							string response;
 							switch(msg) {
 								case ADDCLIENT:
 									{
+										cout << "ADD CLIENT CALLED" << endl;
 										// Add new client to list of clients
 										char port[5];
 										strncpy(port,buffer+2,5);
 										cmdObj.addList(pServerobj->clientList,client_addr,fdaccept, port);
 										// return list of avilable clients on login
+										cout << "LIST IS BEING RETURNED TO CLIENT" << endl;
 										response = cmdObj.returnList(pServerobj->clientList);
 										int len;
 										len = strlen(response.c_str());
@@ -261,6 +264,10 @@ void server :: server_init(int argc, char **argv)
 										cout << "UNBLOCK>>>>>>" <<endl;
 										cmdObj.toggleBlock(pServerobj->clientList,sock_index,buffer,"unblock");
 										break;											
+									}
+								default:
+									{
+										cout << "DEFAULTING HERE" << endl;
 									}																		
 							}
 
