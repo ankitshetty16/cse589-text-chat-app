@@ -40,6 +40,9 @@ class client
     list<clientInfo> clientList;
     void handleServerMsg(char *buffer);
     int isValidClient(std::string clientIP);
+    std::vector<std::string> blockedList;
+    void unblockClient(std::string ip);
+    int isBlockedAlready(std::string ip);
 
 };
 

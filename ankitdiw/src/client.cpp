@@ -49,7 +49,6 @@ void decodeListString(list<clientInfo> &clientList,char *buffer)
     clientList.clear();
     std::string buf = buffer;
     int numClients = std::atoi(buf.substr(2,1).c_str());
-    cout<<"Number of clients: "<<numClients<<endl;
     int pos = 3;
     for(int i = 0; i < numClients; ++i)
     {
@@ -116,7 +115,6 @@ void client :: client_init(int argc, char **argv)
     pClientobj->headSocket = 0;
     printf("\n[PA1-CLIENT@CSE489/589]$ ");
     fflush(stdout);
-    cout<<pClientobj->listeningPort<<"\n";
     int selret,sock_index;
 
     while(1)
@@ -261,6 +259,22 @@ std::string encodeMsg(std::string ip,std::string message)
     std::string msg;
     msg = "~M"+digitFormatter(ip.length())+ip+digitFormatter(message.length())+message;
     return msg;
+}
+
+int client :: isBlockedAlready(std::string ip)
+{
+    client* pClientobj = client::getInstance();
+    for(int i = 0; i < pClientobj->blockedList.size();++i)
+    {
+        if(pClientobj->blockedList[i] == ip)
+            return TRUE;
+    }
+    return FALSE;
+}
+void client :: unblockClient(std::string ip)
+{   
+    client* pClientobj = client::getInstance();
+    pClientobj->blockedList.erase(std::remove(pClientobj->blockedList.begin(), pClientobj->blockedList.end(), ip), pClientobj->blockedList.end());
 }
 
 void client :: handleStdinCmd()
@@ -438,9 +452,16 @@ void client :: handleStdinCmd()
                 cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
                 break;
             }
+            if(pClientobj->isBlockedAlready(commandArgv[1]))
+            {
+                cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+                cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+                break;
+            }
 			sendMsgBuf = "~K" + commandArgv[1];
 			cout<<"Sending block message"<<sendMsgBuf<<endl;
             send(pClientobj->serverSocket,sendMsgBuf.c_str(),sendMsgBuf.length(),0);
+            pClientobj->blockedList.push_back(commandArgv[1]);
             cse4589_print_and_log("[%s:SUCCESS]\n", commandArgv[0].c_str());
             cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
 			break;
@@ -464,6 +485,14 @@ void client :: handleStdinCmd()
                 cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
                 break;
             }
+            if(!pClientobj->isBlockedAlready(commandArgv[1]))
+            {
+                cse4589_print_and_log("[%s:ERROR]\n", commandArgv[0].c_str());
+                cse4589_print_and_log("[%s:END]\n", commandArgv[0].c_str());
+                break;
+            }
+
+            pClientobj->unblockClient(commandArgv[1]);
 			sendMsgBuf = "~U" + commandArgv[1];
 			cout<<"Sending unblock message"<<sendMsgBuf<<endl;
             send(pClientobj->serverSocket,sendMsgBuf.c_str(),sendMsgBuf.length(),0);
