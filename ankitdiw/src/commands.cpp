@@ -303,28 +303,29 @@ void commands::toggleBlock(list<clientInfo> &clientList,int sock_index, char* me
 * To display blocked list on server side
 */
 void commands::getBlockedList(list<clientInfo> clientList, string command, string ip) {
-    // cout << "getBLOCKEDLIST callled" << endl;
-    // cout << "BLOCKED LIST FOR IP>>>>>> " << ip << endl;
-    // list<clientInfo>::iterator i = clientList.begin();
-    // vector<string> blockedList;
-    // // TO get list of blocked IPs
-    // while (i != clientList.end()){
-    //     if(i->ip == ip){
-    //         blockedList = i->blocked;
-    //         i++;
-    //     }else{
-    //         ++i;
-    //     }
-    // }
-    
-    // cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
-    // for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
-    //     int index = 1;
-    //     if(i->active == 1 && std::find(clientList.begin(), clientList.end(), i->ip) != clientList.end()){
-    //         cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index++, i -> domain.c_str(), i -> ip.c_str(), i -> port);
-    //     }
-    // }
-    // cse4589_print_and_log("[%s:END]\n", command.c_str());
+    cout << "getBLOCKEDLIST callled" << endl;
+    cout << "BLOCKED LIST FOR IP>>>>>> " << ip << endl;
+    list<clientInfo>::iterator i = clientList.begin();
+    vector<string> blockedList;
+    // TO get list of blocked IPs
+    while (i != clientList.end()){
+        if(i->ip == ip){
+            blockedList = i->blocked;
+            i++;
+        }else{
+            ++i;
+        }
+    }
+   
+    int index = 1;
+    cse4589_print_and_log("[%s:SUCCESS]\n", command.c_str());
+    for(list<clientInfo>::iterator i = clientList.begin(); i != clientList.end(); i++) {
+        if(i->active == 1 && std::find(blockedList.begin(), blockedList.end(), i->ip) != blockedList.end()){
+            cse4589_print_and_log("%-5d%-35s%-20s%-8d\n", index, i -> domain.c_str(), i -> ip.c_str(), i -> port);
+            index = index+1;
+        }
+    }
+    cse4589_print_and_log("[%s:END]\n", command.c_str());
 
 }
 
