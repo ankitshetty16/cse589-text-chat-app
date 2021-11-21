@@ -22,9 +22,12 @@
  */
 #include <iostream>
 #include <stdio.h>
+#include <string> 
 
 #include "../include/global.h"
 #include "../include/logger.h"
+#include "../include/server.hpp"
+#include "../include/client.hpp"
 
 using namespace std;
 
@@ -44,6 +47,15 @@ int main(int argc, char **argv)
     fclose(fopen(LOGFILE, "w"));
 
 	/*Start Here*/
-	
+	if(std::string(argv[1]) == "s")
+	{
+		server* serverObj = server::getInstance();
+		serverObj->server_init(argc, argv);
+	}
+	else if(std::string(argv[1]) == "c")
+	{
+		client* pClientobj = client::getInstance();
+		pClientobj->client_init(argc,argv);
+	}
 	return 0;
 }
